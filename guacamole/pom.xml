@@ -224,7 +224,30 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
 
+            <!-- Generate REST API documentation -->
+            <plugin>  
+                <groupId>com.webcohesion.enunciate</groupId>  
+                <artifactId>enunciate-maven-plugin</artifactId>  
+                <version>2.5.0</version>
+                <configuration>
+                    <docsDir>${project.build.directory}</docsDir>
+                    <configFile>enunciate.xml</configFile>
+                    <api-classes>
+                        <exclude pattern="org.apache.guacamole.**"/>
+                        <include pattern="org.apache.guacamole.rest.**"/>
+                        <include pattern="org.apache.guacamole.form.**"/>
+                        <include pattern="org.apache.guacamole.protocols.**"/>
+                    </api-classes>
+                </configuration>
+                <executions>    
+                    <execution>      
+                        <goals>        
+                            <goal>docs</goal>
+                        </goals>    
+                    </execution>  
+                </executions>  
             </plugin>
 
         </plugins>
