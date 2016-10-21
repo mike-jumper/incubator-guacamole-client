@@ -686,6 +686,13 @@
 
     },
 
+    "PROTOCOL_XORG" : {
+
+        "NAME" : "X.Org Driver"
+
+    },
+
+
     "SETTINGS" : {
 
         "SECTION_HEADER_SETTINGS" : "Settings"

@@ -204,7 +204,8 @@ div.section {
 }
 
 .connection .icon.vnc,
-.connection .icon.rdp {
+.connection .icon.rdp,
+.connection .icon.xorg {
     background-image: url('images/protocol-icons/guac-monitor.png');
 }
 
