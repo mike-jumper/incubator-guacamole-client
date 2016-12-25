@@ -688,10 +688,22 @@
 
     "PROTOCOL_XORG" : {
 
-        "NAME" : "X.Org Driver"
+        "FIELD_HEADER_ENABLE_SFTP"      : "Enable SFTP:",
+        "FIELD_HEADER_READ_ONLY"        : "Read-only:",
+        "FIELD_HEADER_SFTP_DIRECTORY"   : "Default upload directory:",
+        "FIELD_HEADER_SFTP_HOSTNAME"    : "Hostname:",
+        "FIELD_HEADER_SFTP_PASSPHRASE"  : "Passphrase:",
+        "FIELD_HEADER_SFTP_PASSWORD"    : "Password:",
+        "FIELD_HEADER_SFTP_PORT"        : "Port:",
+        "FIELD_HEADER_SFTP_PRIVATE_KEY" : "Private key:",
+        "FIELD_HEADER_SFTP_USERNAME"    : "Username:",
+
+        "NAME" : "X.Org Driver",
+
+        "SECTION_HEADER_DISPLAY"        : "Display",
+        "SECTION_HEADER_SFTP"           : "SFTP"
 
     },
-
 
     "SETTINGS" : {
 

@@ -1,5 +1,71 @@
 {
     "name"  : "xorg",
-    "connectionForms" : [],
-    "sharingProfileForms" : []
+    "connectionForms" : [
+
+        {
+            "name"  : "display",
+            "fields" : [
+                {
+                    "name"    : "read-only",
+                    "type"    : "BOOLEAN",
+                    "options" : [ "true" ]
+                }
+            ]
+        },
+
+        {
+            "name"  : "sftp",
+            "fields" : [
+                {
+                    "name"    : "enable-sftp",
+                    "type"    : "BOOLEAN",
+                    "options" : [ "true" ]
+                },
+                {
+                    "name"  : "sftp-hostname",
+                    "type"  : "TEXT"
+                },
+                {
+                    "name"  : "sftp-port",
+                    "type"  : "NUMERIC"
+                },
+                {
+                    "name"  : "sftp-username",
+                    "type"  : "USERNAME"
+                },
+                {
+                    "name"  : "sftp-password",
+                    "type"  : "PASSWORD"
+                },
+                {
+                    "name"  : "sftp-private-key",
+                    "type"  : "MULTILINE"
+                },
+                {
+                    "name"  : "sftp-passphrase",
+                    "type"  : "PASSWORD"
+                },
+                {
+                    "name"  : "sftp-directory",
+                    "type"  : "TEXT"
+                }
+            ]
+        }
+
+    ],
+    "sharingProfileForms" : [
+
+        {
+            "name"  : "display",
+            "fields" : [
+                {
+                    "name"    : "read-only",
+                    "type"    : "BOOLEAN",
+                    "options" : [ "true" ]
+                }
+            ]
+        }
+
+    ]
+
 }
