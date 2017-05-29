@@ -73,6 +73,12 @@ public class LocalEnvironment implements Environment {
     private static final boolean DEFAULT_GUACD_SSL = false;
 
     /**
+     * The default amount of time that authentication tokens should remain
+     * valid when not in active use, in minutes.
+     */
+    private static final int DEFAULT_API_SESSION_TIMEOUT = 60;
+
+    /**
      * All properties read from guacamole.properties.
      */
     private final Properties properties;
@@ -341,6 +347,11 @@ public class LocalEnvironment implements Environment {
     @Override
     public ProtocolInfo getProtocol(String name) {
         return availableProtocols.get(name);
+    }
+
+    @Override
+    public int getSessionTimeout() throws GuacamoleException {
+        return getProperty(API_SESSION_TIMEOUT, DEFAULT_API_SESSION_TIMEOUT);
     }
 
     @Override
