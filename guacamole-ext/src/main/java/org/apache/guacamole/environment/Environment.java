@@ -67,6 +67,17 @@ public interface Environment {
     };
 
     /**
+     * The session timeout for the authentication tokens, in minutes.
+     */
+    public final IntegerGuacamoleProperty API_SESSION_TIMEOUT =
+            new IntegerGuacamoleProperty() {
+
+        @Override
+        public String getName() { return "api-session-timeout"; }
+
+    };
+
+    /**
      * Returns the Guacamole home directory as determined when this Environment
      * object was created. The Guacamole home directory is found by checking, in
      * order: the guacamole.home system property, the GUACAMOLE_HOME environment
@@ -146,6 +157,19 @@ public interface Environment {
      */
     public <Type> Type getRequiredProperty(GuacamoleProperty<Type> property)
             throws GuacamoleException;
+
+    /**
+     * Returns the amount of time that each authentication token should remain
+     * valid when not in active use, in minutes.
+     *
+     * @return
+     *     The amount of time that each authentication token should remain
+     *     valid when not in active use, in minutes.
+     *
+     * @throws GuacamoleException
+     *     If the session timeout value could not be retrieved.
+     */
+    public int getSessionTimeout() throws GuacamoleException;
 
     /**
      * Returns the connection information which should be used, by default, to
