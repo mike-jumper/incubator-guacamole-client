@@ -352,10 +352,6 @@ public class AuthenticationService {
      * @param credentials
      *     The credentials to use when authenticating the user.
      *
-     * @param token
-     *     The authentication token to use if attempting to re-authenticate an
-     *     existing session, or null to request a new token.
-     *
      * @return
      *     A newly created or existing Guacamole session for the user
      *     authenticated by the given credentials and/or token.
@@ -363,8 +359,11 @@ public class AuthenticationService {
      * @throws GuacamoleException
      *     If the authentication or re-authentication attempt fails.
      */
-    public GuacamoleSession authenticate(Credentials credentials, String token)
+    public GuacamoleSession authenticate(Credentials credentials)
         throws GuacamoleException {
+
+        // Get authentication token from credentials
+        String token = credentials.getToken();
 
         // Pull existing session if token provided
         GuacamoleSession session;
@@ -420,8 +419,11 @@ public class AuthenticationService {
         // If this Guacamole instance does not have a session for the given
         // token, attempt to use the token to authenticate and create such a
         // session
-        if (session == null)
-            session = authenticate(new Credentials(), authToken);
+        if (session == null) {
+            Credentials credentials = new Credentials();
+            credentials.setToken(authToken);
+            session = authenticate(credentials);
+        }
 
         // Authentication failed.
         if (session == null)
