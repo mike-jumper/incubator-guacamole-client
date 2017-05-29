@@ -17,17 +17,19 @@
  * under the License.
  */
 
-package org.apache.guacamole.rest.auth;
+package org.apache.guacamole.net.auth.token;
 
 /**
- * Generates an auth token for an authenticated user.
+ * Generator which produces authentication tokens for uniquely identifying
+ * authenticated users.
  */
-public interface AuthTokenGenerator {
+public interface TokenGenerator {
     
     /**
-     * Get a new auth token.
+     * Returns a new authentication token.
      * 
-     * @return A new auth token.
+     * @return
+     *     A new authentication token.
      */
     public String getToken();
 

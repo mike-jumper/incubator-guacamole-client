@@ -17,27 +17,45 @@
  * under the License.
  */
 
-package org.apache.guacamole.rest.auth;
+package org.apache.guacamole.net.auth.token;
 
 import java.security.SecureRandom;
 import javax.xml.bind.DatatypeConverter;
 
 /**
- * An implementation of the AuthTokenGenerator based around SecureRandom.
+ * A TokenGenerator implementation which uses a secure source of random numbers
+ * to generate 256-bit hexadecimal authentication tokens. This class is
+ * threadsafe. A single instance of this class may be shared by multiple
+ * threads.
  */
-public class SecureRandomAuthTokenGenerator implements AuthTokenGenerator {
+public class SecureRandomTokenGenerator implements TokenGenerator {
 
     /**
-     * Instance of SecureRandom for generating the auth token.
+     * Instance of SecureRandom for generating authentication tokens.
      */
     private final SecureRandom secureRandom = new SecureRandom();
+
+    /**
+     * Singleton instance of this class.
+     */
+    private static final SecureRandomTokenGenerator instance =
+            new SecureRandomTokenGenerator();
+
+    /**
+     * Returns a singleton instance of the SecureRandomTokenGenerator.
+     *
+     * @return
+     *     A singleton instance of the SecureRandomTokenGenerator.
+     */
+    public static SecureRandomTokenGenerator getInstance() {
+        return instance;
+    }
 
     @Override
     public String getToken() {
         byte[] bytes = new byte[32];
         secureRandom.nextBytes(bytes);
-        
         return DatatypeConverter.printHexBinary(bytes);
     }
-    
+
 }
