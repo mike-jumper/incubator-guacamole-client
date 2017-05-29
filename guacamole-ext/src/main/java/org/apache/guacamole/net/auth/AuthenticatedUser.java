@@ -33,6 +33,17 @@ public interface AuthenticatedUser extends Identifiable {
     public static final String ANONYMOUS_IDENTIFIER = "";
 
     /**
+     * Returns the unique authentication token generated for this authenticated
+     * user. This token will be used in all subsequent requests to represent
+     * the user.
+     *
+     * @return
+     *     The unique authentication token generated for this authenticated
+     *     user.
+     */
+    String getToken();
+
+    /**
      * Returns the AuthenticationProvider that authenticated this user.
      *
      * @return

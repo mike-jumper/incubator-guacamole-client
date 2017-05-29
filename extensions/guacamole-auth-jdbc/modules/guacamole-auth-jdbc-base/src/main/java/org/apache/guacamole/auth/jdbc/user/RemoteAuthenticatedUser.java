@@ -25,11 +25,23 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.guacamole.net.auth.AuthenticatedUser;
 import org.apache.guacamole.net.auth.AuthenticationProvider;
 import org.apache.guacamole.net.auth.Credentials;
+import org.apache.guacamole.net.auth.token.SecureRandomTokenGenerator;
+import org.apache.guacamole.net.auth.token.TokenGenerator;
 
 /**
  * An AuthenticatedUser that has an associated remote host.
  */
 public abstract class RemoteAuthenticatedUser implements AuthenticatedUser {
+
+    /**
+     * The token generator to be used to generate authentication tokens.
+     */
+    private final TokenGenerator tokenGenerator = SecureRandomTokenGenerator.getInstance();
+
+    /**
+     * The unique authentication token generated for this authenticated user.
+     */
+    private final String token = tokenGenerator.getToken();
 
     /**
      * The credentials given when this user authenticated.
@@ -114,6 +126,11 @@ public abstract class RemoteAuthenticatedUser implements AuthenticatedUser {
         this.authenticationProvider = authenticationProvider;
         this.credentials = credentials;
         this.remoteHost = getRemoteHost(credentials);
+    }
+
+    @Override
+    public String getToken() {
+        return token;
     }
 
     @Override

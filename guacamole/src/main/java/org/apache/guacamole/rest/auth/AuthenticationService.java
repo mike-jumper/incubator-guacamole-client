@@ -69,12 +69,6 @@ public class AuthenticationService {
     private TokenSessionMap tokenSessionMap;
 
     /**
-     * A generator for creating new auth tokens.
-     */
-    @Inject
-    private AuthTokenGenerator authTokenGenerator;
-
-    /**
      * Regular expression which matches any IPv4 address.
      */
     private static final String IPV4_ADDRESS_REGEX = "([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3})";
@@ -393,7 +387,7 @@ public class AuthenticationService {
 
         // If no existing session, generate a new token/session pair
         else {
-            authToken = authTokenGenerator.getToken();
+            authToken = authenticatedUser.getToken();
             tokenSessionMap.put(authToken, new GuacamoleSession(environment, authenticatedUser, userContexts));
             logger.debug("Login was successful for user \"{}\".", authenticatedUser.getIdentifier());
         }

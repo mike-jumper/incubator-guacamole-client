@@ -30,9 +30,7 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.apache.guacamole.rest.activeconnection.ActiveConnectionModule;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.apache.guacamole.rest.auth.TokenRESTService;
-import org.apache.guacamole.rest.auth.AuthTokenGenerator;
 import org.apache.guacamole.rest.auth.AuthenticationService;
-import org.apache.guacamole.rest.auth.SecureRandomAuthTokenGenerator;
 import org.apache.guacamole.rest.auth.TokenSessionMap;
 import org.apache.guacamole.rest.connection.ConnectionModule;
 import org.apache.guacamole.rest.connectiongroup.ConnectionGroupModule;
@@ -77,7 +75,6 @@ public class RESTServiceModule extends ServletModule {
 
         // Bind low-level services
         bind(AuthenticationService.class);
-        bind(AuthTokenGenerator.class).to(SecureRandomAuthTokenGenerator.class);
 
         // Automatically translate GuacamoleExceptions for REST methods
         MethodInterceptor interceptor = new RESTExceptionWrapper();

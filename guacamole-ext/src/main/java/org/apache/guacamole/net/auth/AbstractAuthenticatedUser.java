@@ -19,6 +19,8 @@
 
 package org.apache.guacamole.net.auth;
 
+import org.apache.guacamole.net.auth.token.SecureRandomTokenGenerator;
+import org.apache.guacamole.net.auth.token.TokenGenerator;
 
 /**
  * Basic implementation of an AuthenticatedUser which uses the username to
@@ -27,6 +29,19 @@ package org.apache.guacamole.net.auth;
 public abstract class AbstractAuthenticatedUser extends AbstractIdentifiable
         implements AuthenticatedUser {
 
-    // Prior functionality now resides within AbstractIdentifiable
+    /**
+     * The token generator to be used to generate authentication tokens.
+     */
+    private final TokenGenerator tokenGenerator = SecureRandomTokenGenerator.getInstance();
+
+    /**
+     * The unique authentication token generated for this authenticated user.
+     */
+    private final String token = tokenGenerator.getToken();
+
+    @Override
+    public String getToken() {
+        return token;
+    }
 
 }
