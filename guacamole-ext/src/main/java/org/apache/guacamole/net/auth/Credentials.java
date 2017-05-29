@@ -50,6 +50,11 @@ public class Credentials implements Serializable {
     private String password;
 
     /**
+     * An arbitrary and unique authentication token.
+     */
+    private String token;
+
+    /**
      * The address of the client end of the connection which provided these
      * credentials, if known.
      */
@@ -106,6 +111,30 @@ public class Credentials implements Serializable {
      */
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    /**
+     * Returns the arbitrary, unique authentication token associated with this
+     * set of credentials.
+     *
+     * @return
+     *     The unique authentication token associated with this set of
+     *     credentials, or null if no authentication token has been set.
+     */
+    public String getToken() {
+        return token;
+    }
+
+    /**
+     * Sets the arbitrary, unique authentication token associated with this set
+     * of credentials.
+     *
+     * @param token
+     *     The unique authentication token associated with this set of
+     *     credentials.
+     */
+    public void setToken(String token) {
+        this.token = token;
     }
 
     /**

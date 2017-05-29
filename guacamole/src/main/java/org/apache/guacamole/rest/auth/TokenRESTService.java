@@ -77,12 +77,16 @@ public class TokenRESTService {
      *     The password to associate with the credentials, or null if the
      *     password should be derived from the request.
      *
+     * @param token
+     *     The authentication token associated with the given request, or null
+     *     if no token was provided.
+     *
      * @return
      *     A new Credentials object whose contents have been derived from the
      *     given request, along with the provided username and password.
      */
     private Credentials getCredentials(HttpServletRequest request,
-            String username, String password) {
+            String username, String password, String token) {
 
         // If no username/password given, try Authorization header
         if (username == null && password == null) {
@@ -120,6 +124,7 @@ public class TokenRESTService {
         Credentials credentials = new Credentials();
         credentials.setUsername(username);
         credentials.setPassword(password);
+        credentials.setToken(token);
         credentials.setRequest(request);
         credentials.setSession(request.getSession(true));
         credentials.setRemoteAddress(request.getRemoteAddr());
@@ -175,10 +180,10 @@ public class TokenRESTService {
         HttpServletRequest request = new APIRequest(consumedRequest, parameters);
 
         // Build credentials from request
-        Credentials credentials = getCredentials(request, username, password);
+        Credentials credentials = getCredentials(request, username, password, token);
 
         // Create/update session producing possibly-new token
-        GuacamoleSession session = authenticationService.authenticate(credentials, token);
+        GuacamoleSession session = authenticationService.authenticate(credentials);
         token = session.getAuthenticatedUser().getToken();
 
         // Build list of all available auth providers
