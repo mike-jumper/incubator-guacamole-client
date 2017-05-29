@@ -178,12 +178,8 @@ public class TokenRESTService {
         Credentials credentials = getCredentials(request, username, password);
 
         // Create/update session producing possibly-new token
-        token = authenticationService.authenticate(credentials, token);
-
-        // Pull corresponding session
-        GuacamoleSession session = authenticationService.getGuacamoleSession(token);
-        if (session == null)
-            throw new GuacamoleResourceNotFoundException("No such token.");
+        GuacamoleSession session = authenticationService.authenticate(credentials, token);
+        token = session.getAuthenticatedUser().getToken();
 
         // Build list of all available auth providers
         List<UserContext> userContexts = session.getUserContexts();
