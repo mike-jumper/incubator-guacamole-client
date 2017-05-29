@@ -343,11 +343,11 @@ public class AuthenticationService {
 
     /**
      * Authenticates a user using the given credentials and optional
-     * authentication token, returning the authentication token associated with
-     * the user's Guacamole session, which may be newly generated. If an
-     * existing token is provided, the authentication procedure will attempt to
-     * update or reuse the provided token, but it is possible that a new token
-     * will be returned. Note that this function CANNOT return null.
+     * authentication token, returning the user's Guacamole session, which may
+     * be newly generated. If an existing token is provided, the authentication
+     * procedure will attempt to update or reuse the provided token, but it is
+     * possible that a new token will be created. Note that this function
+     * CANNOT return null.
      *
      * @param credentials
      *     The credentials to use when authenticating the user.
@@ -357,42 +357,47 @@ public class AuthenticationService {
      *     existing session, or null to request a new token.
      *
      * @return
-     *     The authentication token associated with the newly created or
-     *     existing session.
+     *     A newly created or existing Guacamole session for the user
+     *     authenticated by the given credentials and/or token.
      *
      * @throws GuacamoleException
      *     If the authentication or re-authentication attempt fails.
      */
-    public String authenticate(Credentials credentials, String token)
+    public GuacamoleSession authenticate(Credentials credentials, String token)
         throws GuacamoleException {
 
         // Pull existing session if token provided
-        GuacamoleSession existingSession;
+        GuacamoleSession session;
         if (token != null)
-            existingSession = tokenSessionMap.get(token);
+            session = tokenSessionMap.get(token);
         else
-            existingSession = null;
+            session = null;
 
         // Get up-to-date AuthenticatedUser and associated UserContexts
-        AuthenticatedUser authenticatedUser = getAuthenticatedUser(existingSession, credentials);
-        List<UserContext> userContexts = getUserContexts(existingSession, authenticatedUser, credentials);
+        AuthenticatedUser authenticatedUser = getAuthenticatedUser(session, credentials);
+        List<UserContext> userContexts = getUserContexts(session, authenticatedUser, credentials);
 
         // Update existing session, if it exists
-        String authToken;
-        if (existingSession != null) {
-            authToken = token;
-            existingSession.setAuthenticatedUser(authenticatedUser);
-            existingSession.setUserContexts(userContexts);
+        if (session != null) {
+            session.setAuthenticatedUser(authenticatedUser);
+            session.setUserContexts(userContexts);
+
+            // Replace old token if the token has changed
+            if (!authenticatedUser.getToken().equals(token)) {
+                tokenSessionMap.put(authenticatedUser.getToken(), session);
+                tokenSessionMap.remove(token);
+            }
+
         }
 
         // If no existing session, generate a new token/session pair
         else {
-            authToken = authenticatedUser.getToken();
-            tokenSessionMap.put(authToken, new GuacamoleSession(environment, authenticatedUser, userContexts));
+            session = new GuacamoleSession(environment, authenticatedUser, userContexts);
+            tokenSessionMap.put(authenticatedUser.getToken(), session);
             logger.debug("Login was successful for user \"{}\".", authenticatedUser.getIdentifier());
         }
 
-        return authToken;
+        return session;
 
     }
 
@@ -411,7 +416,13 @@ public class AuthenticationService {
         
         // Try to get the session from the map of logged in users.
         GuacamoleSession session = tokenSessionMap.get(authToken);
-       
+
+        // If this Guacamole instance does not have a session for the given
+        // token, attempt to use the token to authenticate and create such a
+        // session
+        if (session == null)
+            session = authenticate(new Credentials(), authToken);
+
         // Authentication failed.
         if (session == null)
             throw new GuacamoleUnauthorizedException("Permission Denied.");
