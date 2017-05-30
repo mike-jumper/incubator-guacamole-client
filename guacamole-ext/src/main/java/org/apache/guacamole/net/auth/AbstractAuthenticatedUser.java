@@ -44,4 +44,9 @@ public abstract class AbstractAuthenticatedUser extends AbstractIdentifiable
         return token;
     }
 
+    @Override
+    public void invalidate() {
+        // Nothing to invalidate
+    }
+
 }
