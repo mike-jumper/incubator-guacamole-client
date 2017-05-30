@@ -409,3 +409,36 @@ CREATE TABLE guacamole_user_password_history (
 );
 
 CREATE INDEX ON guacamole_user_password_history(user_id);
+
+--
+-- User session information
+--
+
+CREATE TABLE guacamole_user_session (
+
+  user_session_id serial  NOT NULL,
+  user_id                 integer NOT NULL,
+
+  -- Unique authentication token
+  token varchar(256) NOT NULL,
+
+  -- Authentication result details
+  remote_host varchar(256) NOT NULL,
+
+  -- The time that the session was last used
+  last_used timestamptz NOT NULL,
+
+  PRIMARY KEY (user_session_id),
+
+  CONSTRAINT guacamole_user_session_token
+    UNIQUE (token),
+
+  CONSTRAINT guacamole_user_session_ibfk_1
+    FOREIGN KEY (user_id)
+    REFERENCES guacamole_user(user_id) ON DELETE CASCADE
+
+);
+
+CREATE INDEX ON guacamole_user_session(user_id);
+CREATE INDEX ON guacamole_user_session(remote_host);
+CREATE INDEX ON guacamole_user_session(last_used);

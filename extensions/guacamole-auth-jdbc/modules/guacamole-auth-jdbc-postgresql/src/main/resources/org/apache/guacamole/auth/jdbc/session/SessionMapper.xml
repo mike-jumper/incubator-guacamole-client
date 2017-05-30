@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+
+<mapper namespace="org.apache.guacamole.auth.jdbc.session.SessionMapper">
+
+    <!-- Result mapper for session objects -->
+    <resultMap id="SessionResultMap" type="org.apache.guacamole.auth.jdbc.session.SessionModel">
+        <id     column="user_session_id"    property="objectID"   jdbcType="INTEGER"/>
+        <result column="user_id"            property="userID"     jdbcType="INTEGER"/>
+        <result column="username"           property="username"   jdbcType="VARCHAR"/>
+        <result column="token"              property="identifier" jdbcType="VARCHAR"/>
+        <result column="remote_host"        property="remoteHost" jdbcType="VARCHAR"/>
+        <result column="last_used"          property="lastUsed"   jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- Select an individual session by identifier -->
+    <select id="select" resultMap="SessionResultMap">
+
+        SELECT
+            guacamole_user_session.user_session_id,
+            guacamole_user_session.user_id,
+            guacamole_user.username,
+            guacamole_user_session.token,
+            guacamole_user_session.remote_host,
+            guacamole_user_session.last_used
+        FROM guacamole_user_session
+        JOIN guacamole_user ON guacamole_user.user_id = guacamole_user_session.user_id
+        WHERE token = #{token,jdbcType=VARCHAR}
+
+    </select>
+
+    <!-- Delete single session by identifier -->
+    <delete id="delete">
+        DELETE FROM guacamole_user_session
+        WHERE token = #{token,jdbcType=VARCHAR}
+    </delete>
+
+    <!-- Insert single session -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="session.objectID"
+            parameterType="org.apache.guacamole.auth.jdbc.session.SessionModel">
+
+        INSERT INTO guacamole_user_session (
+            user_id,
+            token,
+            remote_host,
+            last_used
+        )
+        VALUES (
+            #{session.userID,jdbcType=INTEGER},
+            #{session.identifier,jdbcType=VARCHAR},
+            #{session.remoteHost,jdbcType=VARCHAR},
+            #{session.lastUsed,jdbcType=TIMESTAMP}
+        )
+
+    </insert>
+
+    <!-- Update timestamp of single session -->
+    <update id="touch" parameterType="org.apache.guacamole.auth.jdbc.session.SessionModel">
+        UPDATE guacamole_user_session
+        SET last_used = #{session.lastUsed,jdbcType=TIMESTAMP}
+        WHERE token = #{session.identifier,jdbcType=VARCHAR}
+    </update>
+
+</mapper>
