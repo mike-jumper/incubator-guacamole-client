@@ -23,10 +23,10 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import org.apache.guacamole.GuacamoleException;
 import org.apache.guacamole.auth.jdbc.AuthenticationProviderService;
+import org.apache.guacamole.auth.jdbc.InjectedAuthenticationProvider;
 import org.apache.guacamole.auth.jdbc.sharing.user.SharedAuthenticatedUser;
 import org.apache.guacamole.auth.jdbc.sharing.user.SharedUserContext;
 import org.apache.guacamole.net.auth.AuthenticatedUser;
-import org.apache.guacamole.net.auth.AuthenticationProvider;
 import org.apache.guacamole.net.auth.Credentials;
 import org.apache.guacamole.net.auth.UserContext;
 import org.apache.guacamole.net.auth.credentials.CredentialsInfo;
@@ -53,7 +53,7 @@ public class SharedAuthenticationProviderService implements AuthenticationProvid
     private ConnectionSharingService sharingService;
 
     @Override
-    public AuthenticatedUser authenticateUser(AuthenticationProvider authenticationProvider,
+    public AuthenticatedUser authenticateUser(InjectedAuthenticationProvider authenticationProvider,
             Credentials credentials) throws GuacamoleException {
 
         // Check whether user is authenticating with a valid sharing key
@@ -68,7 +68,7 @@ public class SharedAuthenticationProviderService implements AuthenticationProvid
 
     @Override
     public SharedUserContext getUserContext(
-            AuthenticationProvider authenticationProvider,
+            InjectedAuthenticationProvider authenticationProvider,
             AuthenticatedUser authenticatedUser) throws GuacamoleException {
 
         // Obtain a reference to a correct AuthenticatedUser which can be used
@@ -94,7 +94,7 @@ public class SharedAuthenticationProviderService implements AuthenticationProvid
     }
 
     @Override
-    public UserContext updateUserContext(AuthenticationProvider authenticationProvider,
+    public UserContext updateUserContext(InjectedAuthenticationProvider authenticationProvider,
             UserContext context, AuthenticatedUser authenticatedUser,
             Credentials credentials) throws GuacamoleException {
 
@@ -107,6 +107,11 @@ public class SharedAuthenticationProviderService implements AuthenticationProvid
 
         return context;
 
+    }
+
+    @Override
+    public void invalidateToken(String token) {
+        // This auth provider doesn't persist tokens
     }
 
 }

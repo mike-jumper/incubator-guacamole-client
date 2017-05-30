@@ -31,6 +31,7 @@ import org.apache.guacamole.auth.jdbc.base.ModeledDirectoryObjectService;
 import org.apache.guacamole.GuacamoleClientException;
 import org.apache.guacamole.GuacamoleException;
 import org.apache.guacamole.GuacamoleUnsupportedException;
+import org.apache.guacamole.auth.jdbc.InjectedAuthenticationProvider;
 import org.apache.guacamole.auth.jdbc.permission.ObjectPermissionMapper;
 import org.apache.guacamole.auth.jdbc.permission.ObjectPermissionModel;
 import org.apache.guacamole.auth.jdbc.permission.UserPermissionMapper;
@@ -40,7 +41,6 @@ import org.apache.guacamole.auth.jdbc.session.SessionService;
 import org.apache.guacamole.form.Field;
 import org.apache.guacamole.form.PasswordField;
 import org.apache.guacamole.net.auth.AuthenticatedUser;
-import org.apache.guacamole.net.auth.AuthenticationProvider;
 import org.apache.guacamole.net.auth.User;
 import org.apache.guacamole.net.auth.credentials.CredentialsInfo;
 import org.apache.guacamole.net.auth.credentials.GuacamoleInsufficientCredentialsException;
@@ -337,7 +337,7 @@ public class UserService extends ModeledDirectoryObjectService<ModeledUser, User
      *     authenticated user.
      */
     public ModeledAuthenticatedUser retrieveAuthenticatedUser(
-            AuthenticationProvider authenticationProvider,
+            InjectedAuthenticationProvider authenticationProvider,
             String token) throws GuacamoleException {
 
         // Retrieve credentials for provided token
@@ -377,7 +377,8 @@ public class UserService extends ModeledDirectoryObjectService<ModeledUser, User
      * @throws GuacamoleException
      *     If the provided credentials to not conform to expectations.
      */
-    public ModeledAuthenticatedUser retrieveAuthenticatedUser(AuthenticationProvider authenticationProvider,
+    public ModeledAuthenticatedUser retrieveAuthenticatedUser(
+            InjectedAuthenticationProvider authenticationProvider,
             Credentials credentials) throws GuacamoleException {
 
         // Get username and password
@@ -438,7 +439,7 @@ public class UserService extends ModeledDirectoryObjectService<ModeledUser, User
      *     If a ModeledUser object for the user corresponding to the given
      *     AuthenticatedUser cannot be created.
      */
-    public ModeledUser retrieveUser(AuthenticationProvider authenticationProvider,
+    public ModeledUser retrieveUser(InjectedAuthenticationProvider authenticationProvider,
             AuthenticatedUser authenticatedUser) throws GuacamoleException {
 
         // If we already queried this user, return that rather than querying again

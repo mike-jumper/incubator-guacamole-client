@@ -109,4 +109,15 @@ public abstract class InjectedAuthenticationProvider implements AuthenticationPr
         // Do nothing
     }
 
+    /**
+     * Invalidates the user session associated with the given authentication
+     * token.
+     *
+     * @param token
+     *     The authentication token of the session to invalidate.
+     */
+    public void invalidateToken(String token) {
+        authProviderService.invalidateToken(token);
+    }
+
 }

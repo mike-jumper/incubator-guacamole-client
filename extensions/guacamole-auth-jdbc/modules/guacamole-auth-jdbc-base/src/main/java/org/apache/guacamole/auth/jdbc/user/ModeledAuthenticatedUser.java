@@ -22,8 +22,8 @@ package org.apache.guacamole.auth.jdbc.user;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.apache.guacamole.auth.jdbc.InjectedAuthenticationProvider;
 import org.apache.guacamole.net.auth.AuthenticatedUser;
-import org.apache.guacamole.net.auth.AuthenticationProvider;
 import org.apache.guacamole.net.auth.Credentials;
 
 /**
@@ -43,7 +43,7 @@ public class ModeledAuthenticatedUser extends RemoteAuthenticatedUser {
      * The AuthenticationProvider that is associated with this user's
      * corresponding ModeledUser.
      */
-    private final AuthenticationProvider modelAuthenticationProvider;
+    private final InjectedAuthenticationProvider modelAuthenticationProvider;
 
     /**
      * The connections which have been committed for use by this user in the
@@ -75,7 +75,7 @@ public class ModeledAuthenticatedUser extends RemoteAuthenticatedUser {
      *     this user in the database.
      */
     public ModeledAuthenticatedUser(AuthenticatedUser authenticatedUser,
-            AuthenticationProvider modelAuthenticationProvider, ModeledUser user) {
+            InjectedAuthenticationProvider modelAuthenticationProvider, ModeledUser user) {
         super(authenticatedUser.getAuthenticationProvider(), authenticatedUser.getCredentials());
         this.modelAuthenticationProvider = modelAuthenticationProvider;
         this.user = user;
@@ -96,7 +96,7 @@ public class ModeledAuthenticatedUser extends RemoteAuthenticatedUser {
      * @param credentials 
      *     The credentials given by the user when they authenticated.
      */
-    public ModeledAuthenticatedUser(AuthenticationProvider authenticationProvider,
+    public ModeledAuthenticatedUser(InjectedAuthenticationProvider authenticationProvider,
             ModeledUser user, Credentials credentials) {
         super(authenticationProvider, credentials);
         this.modelAuthenticationProvider = authenticationProvider;
@@ -122,7 +122,7 @@ public class ModeledAuthenticatedUser extends RemoteAuthenticatedUser {
      *     The authentication token to use, or null to generate a random
      *     authenticated token.
      */
-    public ModeledAuthenticatedUser(AuthenticationProvider authenticationProvider,
+    public ModeledAuthenticatedUser(InjectedAuthenticationProvider authenticationProvider,
             ModeledUser user, Credentials credentials, String token) {
         super(authenticationProvider, credentials, token);
         this.modelAuthenticationProvider = authenticationProvider;
@@ -151,7 +151,7 @@ public class ModeledAuthenticatedUser extends RemoteAuthenticatedUser {
      *     The AuthenticationProvider which produced the ModeledUser
      *     retrievable via getUser().
      */
-    public AuthenticationProvider getModelAuthenticationProvider() {
+    public InjectedAuthenticationProvider getModelAuthenticationProvider() {
         return modelAuthenticationProvider;
     }
 
@@ -193,6 +193,11 @@ public class ModeledAuthenticatedUser extends RemoteAuthenticatedUser {
     @Override
     public void setIdentifier(String identifier) {
         user.setIdentifier(identifier);
+    }
+
+    @Override
+    public void invalidate() {
+        modelAuthenticationProvider.invalidateToken(getToken());
     }
 
 }

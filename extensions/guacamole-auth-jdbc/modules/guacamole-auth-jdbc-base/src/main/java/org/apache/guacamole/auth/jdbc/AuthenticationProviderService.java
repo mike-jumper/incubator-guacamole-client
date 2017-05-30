@@ -53,7 +53,7 @@ public interface AuthenticationProviderService  {
      *     If an error occurs during authentication, or if the given
      *     credentials are invalid or expired.
      */
-    public AuthenticatedUser authenticateUser(AuthenticationProvider authenticationProvider,
+    public AuthenticatedUser authenticateUser(InjectedAuthenticationProvider authenticationProvider,
             Credentials credentials) throws GuacamoleException;
 
     /**
@@ -75,7 +75,7 @@ public interface AuthenticationProviderService  {
      *     If an error occurs during authentication, or if the given
      *     credentials are invalid or expired.
      */
-    public UserContext getUserContext(AuthenticationProvider authenticationProvider,
+    public UserContext getUserContext(InjectedAuthenticationProvider authenticationProvider,
             AuthenticatedUser authenticatedUser) throws GuacamoleException;
 
     /**
@@ -106,8 +106,17 @@ public interface AuthenticationProviderService  {
      *     If an error occurs during authentication, or if the given
      *     credentials are invalid or expired.
      */
-    public UserContext updateUserContext(AuthenticationProvider authenticationProvider,
+    public UserContext updateUserContext(InjectedAuthenticationProvider authenticationProvider,
             UserContext context, AuthenticatedUser authenticatedUser,
             Credentials credentials) throws GuacamoleException;
+
+    /**
+     * Invalidates the user session associated with the given authentication
+     * token.
+     *
+     * @param token
+     *     The authentication token of the session to invalidate.
+     */
+    public void invalidateToken(String token);
 
 }

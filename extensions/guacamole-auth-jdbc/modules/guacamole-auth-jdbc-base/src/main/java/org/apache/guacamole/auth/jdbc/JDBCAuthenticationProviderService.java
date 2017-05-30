@@ -30,7 +30,6 @@ import org.apache.guacamole.auth.jdbc.user.ModeledUserContext;
 import org.apache.guacamole.auth.jdbc.user.UserModel;
 import org.apache.guacamole.auth.jdbc.user.UserService;
 import org.apache.guacamole.net.auth.AuthenticatedUser;
-import org.apache.guacamole.net.auth.AuthenticationProvider;
 import org.apache.guacamole.net.auth.Credentials;
 import org.apache.guacamole.net.auth.UserContext;
 import org.apache.guacamole.net.auth.credentials.CredentialsInfo;
@@ -74,7 +73,7 @@ public class JDBCAuthenticationProviderService implements AuthenticationProvider
     private Provider<ModeledUserContext> userContextProvider;
 
     @Override
-    public AuthenticatedUser authenticateUser(AuthenticationProvider authenticationProvider,
+    public AuthenticatedUser authenticateUser(InjectedAuthenticationProvider authenticationProvider,
             Credentials credentials) throws GuacamoleException {
 
         // Authenticate user
@@ -88,7 +87,7 @@ public class JDBCAuthenticationProviderService implements AuthenticationProvider
     }
 
     @Override
-    public ModeledUserContext getUserContext(AuthenticationProvider authenticationProvider,
+    public ModeledUserContext getUserContext(InjectedAuthenticationProvider authenticationProvider,
             AuthenticatedUser authenticatedUser) throws GuacamoleException {
 
         // Retrieve user account for already-authenticated user
@@ -127,7 +126,7 @@ public class JDBCAuthenticationProviderService implements AuthenticationProvider
     }
 
     @Override
-    public UserContext updateUserContext(AuthenticationProvider authenticationProvider,
+    public UserContext updateUserContext(InjectedAuthenticationProvider authenticationProvider,
             UserContext context, AuthenticatedUser authenticatedUser,
             Credentials credentials) throws GuacamoleException {
 
@@ -139,6 +138,11 @@ public class JDBCAuthenticationProviderService implements AuthenticationProvider
         // No need to update the context
         return context;
 
+    }
+
+    @Override
+    public void invalidateToken(String token) {
+        sessionService.invalidate(token);
     }
 
 }
