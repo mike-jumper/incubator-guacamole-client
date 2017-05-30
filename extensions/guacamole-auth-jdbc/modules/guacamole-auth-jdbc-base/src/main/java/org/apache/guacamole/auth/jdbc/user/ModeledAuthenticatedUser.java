@@ -83,7 +83,7 @@ public class ModeledAuthenticatedUser extends RemoteAuthenticatedUser {
 
     /**
      * Creates a new AuthenticatedUser associating the given user with their
-     * corresponding credentials.
+     * corresponding credentials, and generating a random authentication token.
      *
      * @param authenticationProvider
      *     The AuthenticationProvider that has authenticated the given user
@@ -99,6 +99,32 @@ public class ModeledAuthenticatedUser extends RemoteAuthenticatedUser {
     public ModeledAuthenticatedUser(AuthenticationProvider authenticationProvider,
             ModeledUser user, Credentials credentials) {
         super(authenticationProvider, credentials);
+        this.modelAuthenticationProvider = authenticationProvider;
+        this.user = user;
+    }
+
+    /**
+     * Creates a new AuthenticatedUser associating the given user with their
+     * corresponding credentials, and using the provided authentication token.
+     *
+     * @param authenticationProvider
+     *     The AuthenticationProvider that has authenticated the given user
+     *     and which produced the given ModeledUser.
+     *
+     * @param user
+     *     A ModeledUser object which is backed by the data associated with
+     *     this user in the database.
+     *
+     * @param credentials
+     *     The credentials given by the user when they authenticated.
+     *
+     * @param token
+     *     The authentication token to use, or null to generate a random
+     *     authenticated token.
+     */
+    public ModeledAuthenticatedUser(AuthenticationProvider authenticationProvider,
+            ModeledUser user, Credentials credentials, String token) {
+        super(authenticationProvider, credentials, token);
         this.modelAuthenticationProvider = authenticationProvider;
         this.user = user;
     }

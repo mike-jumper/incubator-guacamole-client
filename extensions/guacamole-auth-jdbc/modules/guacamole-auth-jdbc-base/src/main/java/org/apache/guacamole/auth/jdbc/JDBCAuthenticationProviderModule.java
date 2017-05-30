@@ -74,10 +74,12 @@ import org.apache.guacamole.auth.jdbc.sharingprofile.SharingProfileDirectory;
 import org.apache.guacamole.auth.jdbc.sharingprofile.SharingProfileMapper;
 import org.apache.guacamole.auth.jdbc.sharingprofile.SharingProfileParameterMapper;
 import org.apache.guacamole.auth.jdbc.sharingprofile.SharingProfileService;
+import org.apache.guacamole.auth.jdbc.session.SessionService;
 import org.apache.guacamole.auth.jdbc.tunnel.RestrictedGuacamoleTunnelService;
 import org.apache.guacamole.auth.jdbc.user.PasswordRecordMapper;
 import org.mybatis.guice.MyBatisModule;
 import org.mybatis.guice.datasource.builtin.PooledDataSourceProvider;
+import org.apache.guacamole.auth.jdbc.session.SessionMapper;
 
 /**
  * Guice module which configures the injections used by the JDBC authentication
@@ -120,6 +122,7 @@ public class JDBCAuthenticationProviderModule extends MyBatisModule {
         addMapperClass(ConnectionRecordMapper.class);
         addMapperClass(ConnectionParameterMapper.class);
         addMapperClass(PasswordRecordMapper.class);
+        addMapperClass(SessionMapper.class);
         addMapperClass(SystemPermissionMapper.class);
         addMapperClass(SharingProfileMapper.class);
         addMapperClass(SharingProfileParameterMapper.class);
@@ -161,6 +164,7 @@ public class JDBCAuthenticationProviderModule extends MyBatisModule {
         bind(PasswordEncryptionService.class).to(SHA256PasswordEncryptionService.class);
         bind(PasswordPolicyService.class);
         bind(SaltService.class).to(SecureRandomSaltService.class);
+        bind(SessionService.class);
         bind(SharedConnectionMap.class).to(HashSharedConnectionMap.class).in(Scopes.SINGLETON);
         bind(ShareKeyGenerator.class).to(SecureRandomShareKeyGenerator.class).in(Scopes.SINGLETON);
         bind(SharingProfilePermissionService.class);

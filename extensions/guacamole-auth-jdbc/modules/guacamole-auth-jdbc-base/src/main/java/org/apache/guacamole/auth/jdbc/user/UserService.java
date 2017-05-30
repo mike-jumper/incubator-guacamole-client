@@ -36,6 +36,7 @@ import org.apache.guacamole.auth.jdbc.permission.ObjectPermissionModel;
 import org.apache.guacamole.auth.jdbc.permission.UserPermissionMapper;
 import org.apache.guacamole.auth.jdbc.security.PasswordEncryptionService;
 import org.apache.guacamole.auth.jdbc.security.PasswordPolicyService;
+import org.apache.guacamole.auth.jdbc.session.SessionService;
 import org.apache.guacamole.form.Field;
 import org.apache.guacamole.form.PasswordField;
 import org.apache.guacamole.net.auth.AuthenticatedUser;
@@ -134,6 +135,12 @@ public class UserService extends ModeledDirectoryObjectService<ModeledUser, User
      */
     @Inject
     private PasswordPolicyService passwordPolicyService;
+
+    /**
+     * Service for maintaining Guacamole session state.
+     */
+    @Inject
+    private SessionService sessionService;
 
     @Override
     protected ModeledDirectoryObjectMapper<UserModel> getObjectMapper() {
@@ -311,6 +318,46 @@ public class UserService extends ModeledDirectoryObjectService<ModeledUser, User
     }
 
     /**
+     * Retrieves the user corresponding to the given authentication token.
+     * The credentials for the user are retrieved using the token.
+     *
+     * @param authenticationProvider
+     *     The AuthenticationProvider on behalf of which the user is being
+     *     retrieved.
+     *
+     * @param token
+     *     The authentication token to use when locating the user.
+     *
+     * @return
+     *     An AuthenticatedUser containing the existing ModeledUser object if
+     *     the token given is valid, null otherwise.
+     *
+     * @throws GuacamoleException
+     *     If an error occurs while producing the user object for the
+     *     authenticated user.
+     */
+    public ModeledAuthenticatedUser retrieveAuthenticatedUser(
+            AuthenticationProvider authenticationProvider,
+            String token) throws GuacamoleException {
+
+        // Retrieve credentials for provided token
+        Credentials credentials = sessionService.retrieveCredentials(token);
+        if (credentials == null)
+            return null;
+
+        // Retrieve corresponding user model, if such a user exists
+        UserModel userModel = userMapper.selectOne(credentials.getUsername());
+        if (userModel == null)
+            return null;
+
+        // Create corresponding user object, forcing the token, and set up cyclic reference
+        ModeledUser user = getObjectInstance(null, userModel);
+        user.setCurrentUser(new ModeledAuthenticatedUser(authenticationProvider, user, credentials, token));
+        return user.getCurrentUser();
+
+    }
+
+    /**
      * Retrieves the user corresponding to the given credentials from the
      * database. If the user account is expired, and the credentials contain
      * the necessary additional parameters to reset the user's password, the
@@ -336,6 +383,10 @@ public class UserService extends ModeledDirectoryObjectService<ModeledUser, User
         // Get username and password
         String username = credentials.getUsername();
         String password = credentials.getPassword();
+
+        // Attempt to authenticate using token if username/password not provided
+        if (username == null && password == null)
+            return retrieveAuthenticatedUser(authenticationProvider, credentials.getToken());
 
         // Retrieve corresponding user model, if such a user exists
         UserModel userModel = userMapper.selectOne(username);

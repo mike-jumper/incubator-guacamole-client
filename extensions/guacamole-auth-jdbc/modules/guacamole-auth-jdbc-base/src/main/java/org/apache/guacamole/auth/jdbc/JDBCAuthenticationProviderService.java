@@ -23,6 +23,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import org.apache.guacamole.GuacamoleException;
 import org.apache.guacamole.auth.jdbc.security.PasswordPolicyService;
+import org.apache.guacamole.auth.jdbc.session.SessionService;
 import org.apache.guacamole.auth.jdbc.sharing.user.SharedAuthenticatedUser;
 import org.apache.guacamole.auth.jdbc.user.ModeledUser;
 import org.apache.guacamole.auth.jdbc.user.ModeledUserContext;
@@ -47,6 +48,12 @@ public class JDBCAuthenticationProviderService implements AuthenticationProvider
      */
     @Inject
     private JDBCEnvironment environment;
+
+    /**
+     * Service for maintaining Guacamole session state.
+     */
+    @Inject
+    private SessionService sessionService;
 
     /**
      * Service for accessing users.
@@ -109,6 +116,9 @@ public class JDBCAuthenticationProviderService implements AuthenticationProvider
         if (userModel.isExpired() || passwordPolicyService.isPasswordExpired(user))
             userService.resetExpiredPassword(user, authenticatedUser.getCredentials());
 
+        // Store session information for authenticated user
+        sessionService.storeAuthenticationResult(user.getCurrentUser());
+
         // Link to user context
         ModeledUserContext context = userContextProvider.get();
         context.init(user.getCurrentUser());
@@ -120,6 +130,11 @@ public class JDBCAuthenticationProviderService implements AuthenticationProvider
     public UserContext updateUserContext(AuthenticationProvider authenticationProvider,
             UserContext context, AuthenticatedUser authenticatedUser,
             Credentials credentials) throws GuacamoleException {
+
+        // Update stored session information for authenticated user
+        ModeledUser user = userService.retrieveUser(authenticationProvider, authenticatedUser);
+        if (user != null)
+            sessionService.storeAuthenticationResult(user.getCurrentUser());
 
         // No need to update the context
         return context;

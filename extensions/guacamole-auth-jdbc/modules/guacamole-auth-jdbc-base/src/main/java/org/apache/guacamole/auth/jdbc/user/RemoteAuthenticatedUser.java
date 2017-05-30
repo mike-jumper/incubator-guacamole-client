@@ -38,7 +38,7 @@ public abstract class RemoteAuthenticatedUser implements AuthenticatedUser {
     /**
      * The unique authentication token generated for this authenticated user.
      */
-    private final String token = tokenGenerator.getToken();
+    private final String token;
 
     /**
      * The credentials given when this user authenticated.
@@ -57,19 +57,47 @@ public abstract class RemoteAuthenticatedUser implements AuthenticatedUser {
 
     /**
      * Creates a new RemoteAuthenticatedUser, deriving the associated remote
-     * host from the given credentials.
+     * host from the given credentials, and using the provided authentication
+     * token.
      *
      * @param authenticationProvider
      *     The AuthenticationProvider that has authenticated the given user.
      *
      * @param credentials 
      *     The credentials given by the user when they authenticated.
+     *
+     * @param token
+     *     The authentication token to use, or null to generate a random
+     *     authenticated token.
      */
     public RemoteAuthenticatedUser(AuthenticationProvider authenticationProvider,
-            Credentials credentials) {
+            Credentials credentials, String token) {
+
+        // Generate token if necessary
+        if (token == null)
+            token = tokenGenerator.getToken();
+
         this.authenticationProvider = authenticationProvider;
         this.credentials = credentials;
         this.remoteHost = credentials.getRemoteHostname();
+        this.token = token;
+
+    }
+
+    /**
+     * Creates a new RemoteAuthenticatedUser, deriving the associated remote
+     * host from the given credentials, and generating a random authentication
+     * token.
+     *
+     * @param authenticationProvider
+     *     The AuthenticationProvider that has authenticated the given user.
+     *
+     * @param credentials
+     *     The credentials given by the user when they authenticated.
+     */
+    public RemoteAuthenticatedUser(AuthenticationProvider authenticationProvider,
+            Credentials credentials) {
+        this(authenticationProvider, credentials, null);
     }
 
     @Override
