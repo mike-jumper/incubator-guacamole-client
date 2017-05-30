@@ -230,6 +230,9 @@ public class AuthenticationService {
 
             // Otherwise, attempt authentication as a new user
             AuthenticatedUser authenticatedUser = AuthenticationService.this.authenticateUser(credentials);
+
+            // Log authentication success
+            credentials = authenticatedUser.getCredentials();
             if (logger.isInfoEnabled())
                 logger.info("User \"{}\" successfully authenticated from {}.",
                         authenticatedUser.getIdentifier(),
@@ -370,8 +373,9 @@ public class AuthenticationService {
         else
             session = null;
 
-        // Get up-to-date AuthenticatedUser and associated UserContexts
+        // Get up-to-date AuthenticatedUser, Credentials, associated UserContexts
         AuthenticatedUser authenticatedUser = getAuthenticatedUser(session, credentials);
+        credentials = authenticatedUser.getCredentials();
         List<UserContext> userContexts = getUserContexts(session, authenticatedUser, credentials);
 
         // Update existing session, if it exists
