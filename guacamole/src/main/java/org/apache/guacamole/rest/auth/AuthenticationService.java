@@ -422,9 +422,19 @@ public class AuthenticationService {
         // token, attempt to use the token to authenticate and create such a
         // session
         if (session == null) {
+
+            // Retrieve session via token authentication
             Credentials credentials = new Credentials();
             credentials.setToken(authToken);
             session = authenticate(credentials);
+
+            // Store token for future requests if successful
+            if (session != null) {
+                tokenSessionMap.put(authToken, session);
+                logger.debug("Token restored/replicated for user \"{}\".",
+                        session.getAuthenticatedUser().getIdentifier());
+            }
+
         }
 
         // Authentication failed.
@@ -449,6 +459,15 @@ public class AuthenticationService {
      *     authentication token was not valid and no action was taken.
      */
     public boolean destroyGuacamoleSession(String authToken) {
+
+        // Restore/replicate token if necessary and possible
+        try {
+            getGuacamoleSession(authToken);
+        }
+        catch (GuacamoleException e) {
+            logger.debug("Attempt to restore/replicate token prior to session "
+                    + "destruction failed.", e);
+        }
 
         // Remove corresponding GuacamoleSession if the token is valid
         GuacamoleSession session = tokenSessionMap.remove(authToken);
