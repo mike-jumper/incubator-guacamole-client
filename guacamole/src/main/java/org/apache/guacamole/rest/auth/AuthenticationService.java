@@ -23,7 +23,6 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
-import javax.servlet.http.HttpServletRequest;
 import org.apache.guacamole.GuacamoleException;
 import org.apache.guacamole.GuacamoleSecurityException;
 import org.apache.guacamole.GuacamoleUnauthorizedException;
@@ -87,7 +86,7 @@ public class AuthenticationService {
      * Pattern which matches valid values of the de-facto standard
      * "X-Forwarded-For" header.
      */
-    private static final Pattern X_FORWARDED_FOR = Pattern.compile("^" + IP_ADDRESS_REGEX + "(, " + IP_ADDRESS_REGEX + ")*$");
+    private static final Pattern LOGGABLE_ADDRESS = Pattern.compile("^" + IP_ADDRESS_REGEX + "$");
 
     /**
      * Returns a formatted string containing an IP address, or list of IP
@@ -96,21 +95,21 @@ public class AuthenticationService {
      * superficially validated to ensure that it at least looks like a list of
      * IPs.
      *
-     * @param request
-     *     The HTTP request to format.
+     * @param credentials
+     *     The Credentials associated with the request being logged.
      *
      * @return
      *     A formatted string containing one or more IP addresses.
      */
-    private String getLoggableAddress(HttpServletRequest request) {
+    private String getLoggableAddress(Credentials credentials) {
 
-        // Log X-Forwarded-For, if present and valid
-        String header = request.getHeader("X-Forwarded-For");
-        if (header != null && X_FORWARDED_FOR.matcher(header).matches())
-            return "[" + header + ", " + request.getRemoteAddr() + "]";
+        // Format address if valid
+        String address = credentials.getRemoteAddress();
+        if (address != null && LOGGABLE_ADDRESS.matcher(address).matches())
+            return "[" + address + "]";
 
-        // If header absent or invalid, just use source IP
-        return request.getRemoteAddr();
+        // If address is not valid, refuse to log it
+        return "(invalid address)";
 
     }
 
@@ -234,7 +233,7 @@ public class AuthenticationService {
             if (logger.isInfoEnabled())
                 logger.info("User \"{}\" successfully authenticated from {}.",
                         authenticatedUser.getIdentifier(),
-                        getLoggableAddress(credentials.getRequest()));
+                        getLoggableAddress(credentials));
 
             return authenticatedUser;
 
@@ -244,20 +243,19 @@ public class AuthenticationService {
         catch (GuacamoleException e) {
 
             // Get request and username for sake of logging
-            HttpServletRequest request = credentials.getRequest();
             String username = credentials.getUsername();
 
             // Log authentication failures with associated usernames
             if (username != null) {
                 if (logger.isWarnEnabled())
                     logger.warn("Authentication attempt from {} for user \"{}\" failed.",
-                            getLoggableAddress(request), username);
+                            getLoggableAddress(credentials), username);
             }
 
             // Log anonymous authentication failures
             else if (logger.isDebugEnabled())
                 logger.debug("Anonymous authentication attempt from {} failed.",
-                        getLoggableAddress(request));
+                        getLoggableAddress(credentials));
 
             // Rethrow exception
             throw e;
