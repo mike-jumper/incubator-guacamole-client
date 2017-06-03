@@ -27,12 +27,6 @@ angular.module('index').controller('indexController', ['$scope', '$injector',
     var $document        = $injector.get('$document');
     var $window          = $injector.get('$window');
     var clipboardService = $injector.get('clipboardService');
-    var guacNotification = $injector.get('guacNotification');
-    
-    /**
-     * The notification service.
-     */
-    $scope.guacNotification = guacNotification;
 
     /**
      * The message to display to the user as instructions for the login

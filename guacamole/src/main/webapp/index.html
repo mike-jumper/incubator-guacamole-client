@@ -32,19 +32,7 @@
     <body ng-class="page.bodyClassName">
 
         <!-- Content for logged-in users -->
-        <div ng-if="!expectedCredentials">
-        
-            <!-- Global status/error dialog -->
-            <div ng-class="{shown: guacNotification.getStatus()}" class="status-outer">
-                <div class="status-middle">
-                    <guac-notification notification="guacNotification.getStatus()"></guac-notification>
-                </div>
-            </div>
-            
-            <div id="content" ng-view>
-            </div>
-            
-        </div>
+        <guac-content ng-if="!expectedCredentials"></guac-content>
 
         <!-- Login screen for logged-out users -->
         <guac-login ng-show="expectedCredentials"
