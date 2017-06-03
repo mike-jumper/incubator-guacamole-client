@@ -25,7 +25,6 @@ import org.apache.guacamole.io.ReaderGuacamoleReader;
 import org.apache.guacamole.io.WriterGuacamoleWriter;
 import org.apache.guacamole.io.GuacamoleWriter;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.Socket;
 
 import java.io.InputStreamReader;
@@ -76,24 +75,20 @@ public class InetGuacamoleSocket implements GuacamoleSocket {
     /**
      * Creates a new InetGuacamoleSocket which reads and writes instructions
      * to the Guacamole instruction stream of the Guacamole proxy server
-     * running at the given hostname and port.
+     * running at the given address.
      *
-     * @param hostname The hostname of the Guacamole proxy server to connect to.
-     * @param port The port of the Guacamole proxy server to connect to.
-     * @throws GuacamoleException If an error occurs while connecting to the
-     *                            Guacamole proxy server.
+     * @param address
+     *     A SocketAddress describing the hostname and port of the Guacamole
+     *     proxy server to connect to.
+     *
+     * @throws GuacamoleException
+     *     If an error occurs while connecting to the Guacamole proxy server.
      */
-    public InetGuacamoleSocket(String hostname, int port) throws GuacamoleException {
+    public InetGuacamoleSocket(SocketAddress address) throws GuacamoleException {
 
         try {
 
-            logger.debug("Connecting to guacd at {}:{}.", hostname, port);
-
-            // Get address
-            SocketAddress address = new InetSocketAddress(
-                    InetAddress.getByName(hostname),
-                    port
-            );
+            logger.debug("Connecting to guacd at {}.", address);
 
             // Connect with timeout
             sock = new Socket();
@@ -114,6 +109,24 @@ public class InetGuacamoleSocket implements GuacamoleSocket {
             throw new GuacamoleServerException(e);
         }
 
+    }
+
+    /**
+     * Creates a new InetGuacamoleSocket which reads and writes instructions
+     * to the Guacamole instruction stream of the Guacamole proxy server
+     * running at the given hostname and port.
+     *
+     * @param hostname
+     *     The hostname of the Guacamole proxy server to connect to.
+     *
+     * @param port
+     *     The port of the Guacamole proxy server to connect to.
+     *
+     * @throws GuacamoleException
+     *     If an error occurs while connecting to the Guacamole proxy server.
+     */
+    public InetGuacamoleSocket(String hostname, int port) throws GuacamoleException {
+        this(new InetSocketAddress(hostname, port));
     }
 
     @Override

@@ -23,7 +23,6 @@ package org.apache.guacamole.net;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
@@ -74,28 +73,23 @@ public class SSLGuacamoleSocket implements GuacamoleSocket {
     /**
      * Creates a new SSLGuacamoleSocket which reads and writes instructions
      * to the Guacamole instruction stream of the Guacamole proxy server
-     * running at the given hostname and port using SSL.
+     * running at the given address using SSL.
      *
-     * @param hostname The hostname of the Guacamole proxy server to connect to.
-     * @param port The port of the Guacamole proxy server to connect to.
-     * @throws GuacamoleException If an error occurs while connecting to the
-     *                            Guacamole proxy server.
+     * @param address
+     *     A SocketAddress describing the hostname and port of the Guacamole
+     *     proxy server to connect to.
+     *
+     * @throws GuacamoleException
+     *     If an error occurs while connecting to the Guacamole proxy server.
      */
-    public SSLGuacamoleSocket(String hostname, int port) throws GuacamoleException {
+    public SSLGuacamoleSocket(SocketAddress address) throws GuacamoleException {
 
         // Get factory for SSL sockets
         SocketFactory socket_factory = SSLSocketFactory.getDefault();
         
         try {
 
-            logger.debug("Connecting to guacd at {}:{} via SSL/TLS.",
-                    hostname, port);
-
-            // Get address
-            SocketAddress address = new InetSocketAddress(
-                InetAddress.getByName(hostname),
-                port
-            );
+            logger.debug("Connecting to guacd at {} via SSL/TLS.", address);
 
             // Connect with timeout
             sock = socket_factory.createSocket();
@@ -113,6 +107,24 @@ public class SSLGuacamoleSocket implements GuacamoleSocket {
             throw new GuacamoleServerException(e);
         }
 
+    }
+
+    /**
+     * Creates a new SSLGuacamoleSocket which reads and writes instructions
+     * to the Guacamole instruction stream of the Guacamole proxy server
+     * running at the given hostname and port using SSL.
+     *
+     * @param hostname
+     *     The hostname of the Guacamole proxy server to connect to.
+     *
+     * @param port
+     *     The port of the Guacamole proxy server to connect to.
+     *
+     * @throws GuacamoleException
+     *     If an error occurs while connecting to the Guacamole proxy server.
+     */
+    public SSLGuacamoleSocket(String hostname, int port) throws GuacamoleException {
+        this(new InetSocketAddress(hostname, port));
     }
 
     @Override
