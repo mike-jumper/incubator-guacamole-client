@@ -19,6 +19,7 @@
 
 package org.apache.guacamole.auth.jdbc.tunnel;
 
+import java.net.SocketAddress;
 import org.apache.guacamole.GuacamoleException;
 import org.apache.guacamole.net.InetGuacamoleSocket;
 
@@ -34,14 +35,13 @@ public class ManagedInetGuacamoleSocket extends InetGuacamoleSocket {
     private final Runnable socketClosedTask;
 
     /**
-     * Creates a new socket which connects via TCP to a given hostname and
-     * port. If the socket is closed for any reason, the given task is run.
+     * Creates a new socket which connects via TCP to the guacd instance at the
+     * given address. If the socket is closed for any reason, the given task is
+     * run.
      * 
-     * @param hostname
-     *     The hostname of the Guacamole proxy server to connect to.
-     *
-     * @param port
-     *     The port of the Guacamole proxy server to connect to.
+     * @param address
+     *     A SocketAddress describing the hostname and port of the Guacamole
+     *     proxy server to connect to.
      *
      * @param socketClosedTask
      *     The task to run when the socket is closed. This task will NOT be
@@ -51,9 +51,9 @@ public class ManagedInetGuacamoleSocket extends InetGuacamoleSocket {
      * @throws GuacamoleException
      *     If an error occurs while connecting to the Guacamole proxy server.
      */
-    public ManagedInetGuacamoleSocket(String hostname, int port,
+    public ManagedInetGuacamoleSocket(SocketAddress address,
             Runnable socketClosedTask) throws GuacamoleException {
-        super(hostname, port);
+        super(address);
         this.socketClosedTask = socketClosedTask;
     }
 

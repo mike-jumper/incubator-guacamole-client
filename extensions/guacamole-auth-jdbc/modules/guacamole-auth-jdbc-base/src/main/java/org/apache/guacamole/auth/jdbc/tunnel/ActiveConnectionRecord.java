@@ -20,6 +20,7 @@
 package org.apache.guacamole.auth.jdbc.tunnel;
 
 import com.google.inject.Inject;
+import java.net.SocketAddress;
 import java.util.Date;
 import java.util.UUID;
 import org.apache.guacamole.auth.jdbc.connection.ModeledConnection;
@@ -32,7 +33,6 @@ import org.apache.guacamole.net.AbstractGuacamoleTunnel;
 import org.apache.guacamole.net.GuacamoleSocket;
 import org.apache.guacamole.net.GuacamoleTunnel;
 import org.apache.guacamole.net.auth.ConnectionRecord;
-import org.apache.guacamole.protocol.ConfiguredGuacamoleSocket;
 
 
 /**
@@ -82,7 +82,13 @@ public class ActiveConnectionRecord implements ConnectionRecord {
      * is the ID that must be supplied to guacd if joining this connection.
      */
     private String connectionID;
-    
+
+    /**
+     * The SocketAddress of the guacd instance in use by this active
+     * connection.
+     */
+    private SocketAddress guacamoleProxyAddress;
+
     /**
      * The GuacamoleTunnel used by the connection associated with this
      * connection record.
@@ -210,6 +216,7 @@ public class ActiveConnectionRecord implements ConnectionRecord {
             ModeledSharingProfile sharingProfile) {
         init(user, null, activeConnection.getConnection(), sharingProfile);
         this.connectionID = activeConnection.getConnectionID();
+        this.guacamoleProxyAddress = activeConnection.getGuacamoleProxyAddress();
     }
 
     /**
@@ -365,6 +372,10 @@ public class ActiveConnectionRecord implements ConnectionRecord {
      * Associates a new GuacamoleTunnel with this connection record using the
      * given socket.
      *
+     * @param address
+     *     A SocketAddress pointing to the guacd instance that this connection
+     *     is using.
+     *
      * @param socket
      *     The GuacamoleSocket to use to create the tunnel associated with this
      *     connection record.
@@ -375,8 +386,8 @@ public class ActiveConnectionRecord implements ConnectionRecord {
      * @return
      *     The newly-created tunnel associated with this connection record.
      */
-    public GuacamoleTunnel assignGuacamoleTunnel(final GuacamoleSocket socket,
-            String connectionID) {
+    public GuacamoleTunnel assignGuacamoleTunnel(SocketAddress address,
+            final GuacamoleSocket socket, String connectionID) {
 
         // Create tunnel with given socket
         this.tunnel = new AbstractGuacamoleTunnel() {
@@ -396,6 +407,9 @@ public class ActiveConnectionRecord implements ConnectionRecord {
         // Store connection ID of the primary connection only
         if (isPrimaryConnection())
             this.connectionID = connectionID;
+
+        // Store the address of guacd
+        this.guacamoleProxyAddress = address;
 
         // Return newly-created tunnel
         return this.tunnel;
@@ -427,6 +441,18 @@ public class ActiveConnectionRecord implements ConnectionRecord {
      */
     public String getConnectionID() {
         return connectionID;
+    }
+
+    /**
+     * Returns the SocketAddress of the guacd instance in use by this active
+     * connection.
+     *
+     * @return
+     *     The SocketAddress of the guacd instance in use by this active
+     *     connection.
+     */
+    public SocketAddress getGuacamoleProxyAddress() {
+        return guacamoleProxyAddress;
     }
 
     /**

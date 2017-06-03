@@ -21,6 +21,10 @@ package org.apache.guacamole.auth.jdbc.tunnel;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -44,7 +48,6 @@ import org.apache.guacamole.GuacamoleResourceNotFoundException;
 import org.apache.guacamole.GuacamoleSecurityException;
 import org.apache.guacamole.GuacamoleServerException;
 import org.apache.guacamole.GuacamoleUpstreamException;
-import org.apache.guacamole.auth.jdbc.JDBCEnvironment;
 import org.apache.guacamole.auth.jdbc.connection.ConnectionMapper;
 import org.apache.guacamole.net.GuacamoleSocket;
 import org.apache.guacamole.net.GuacamoleTunnel;
@@ -316,8 +319,13 @@ public abstract class AbstractGuacamoleTunnelService implements GuacamoleTunnelS
      * Returns an unconfigured GuacamoleSocket that is already connected to
      * guacd as specified in guacamole.properties, using SSL if necessary.
      *
-     * @param proxyConfig
-     *     The configuration information to use when connecting to guacd.
+     * @param address
+     *     A SocketAddress pointing to the guacd instance that the unconfigured
+     *     GuacamoleSocket should use.
+     *
+     * @param encryptionMethod
+     *     The encryption method that should be used when communicating with
+     *     guacd.
      *
      * @param socketClosedCallback
      *     The callback which should be invoked whenever the returned socket
@@ -330,26 +338,24 @@ public abstract class AbstractGuacamoleTunnelService implements GuacamoleTunnelS
      *     If an error occurs while connecting to guacd, or while parsing
      *     guacd-related properties.
      */
-    private GuacamoleSocket getUnconfiguredGuacamoleSocket(
-            GuacamoleProxyConfiguration proxyConfig,
+    private GuacamoleSocket getUnconfiguredGuacamoleSocket(SocketAddress address,
+            GuacamoleProxyConfiguration.EncryptionMethod encryptionMethod,
             Runnable socketClosedCallback) throws GuacamoleException {
 
         // Select socket type depending on desired encryption
-        switch (proxyConfig.getEncryptionMethod()) {
+        switch (encryptionMethod) {
 
             // Use SSL if requested
             case SSL:
                 return new ManagedSSLGuacamoleSocket(
-                    proxyConfig.getHostname(),
-                    proxyConfig.getPort(),
+                    address,
                     socketClosedCallback
                 );
 
             // Use straight TCP if unencrypted
             case NONE:
                 return new ManagedInetGuacamoleSocket(
-                    proxyConfig.getHostname(),
-                    proxyConfig.getPort(),
+                    address,
                     socketClosedCallback
                 );
 
@@ -470,17 +476,34 @@ public abstract class AbstractGuacamoleTunnelService implements GuacamoleTunnelS
 
         try {
 
+            SocketAddress address;
             GuacamoleConfiguration config;
 
             // Retrieve connection information associated with given connection record
             ModeledConnection connection = activeConnection.getConnection();
 
+            // Get overall guacd configuration
+            GuacamoleProxyConfiguration proxyConfig = connection.getGuacamoleProxyConfiguration();
+
             // Pull configuration directly from the connection if we are not
             // joining an active connection
             if (activeConnection.isPrimaryConnection()) {
+
                 activeConnections.put(connection.getIdentifier(), activeConnection);
                 activeConnectionGroups.put(connection.getParentIdentifier(), activeConnection);
                 config = getGuacamoleConfiguration(activeConnection.getUser(), connection);
+
+                // Get hostname/port of guacd
+                try {
+                    address = new InetSocketAddress(
+                        InetAddress.getByName(proxyConfig.getHostname()),
+                        proxyConfig.getPort()
+                    );
+                }
+                catch (IOException e) {
+                    throw new GuacamoleServerException(e);
+                }
+
             }
 
             // If we ARE joining an active connection, generate a configuration
@@ -492,6 +515,8 @@ public abstract class AbstractGuacamoleTunnelService implements GuacamoleTunnelS
                 if (connectionID == null)
                     throw new GuacamoleResourceNotFoundException("No existing connection to be joined.");
 
+                address = activeConnection.getGuacamoleProxyAddress();
+
                 // Build configuration from the sharing profile and the ID of
                 // the connection being joined
                 config = getGuacamoleConfiguration(activeConnection.getUser(),
@@ -501,14 +526,16 @@ public abstract class AbstractGuacamoleTunnelService implements GuacamoleTunnelS
 
             // Obtain socket which will automatically run the cleanup task
             ConfiguredGuacamoleSocket socket = new ConfiguredGuacamoleSocket(
-                getUnconfiguredGuacamoleSocket(connection.getGuacamoleProxyConfiguration(),
+                getUnconfiguredGuacamoleSocket(address, proxyConfig.getEncryptionMethod(),
                         cleanupTask), config, info);
 
             // Assign and return new tunnel
             if (interceptErrors)
-                return activeConnection.assignGuacamoleTunnel(new FailoverGuacamoleSocket(socket), socket.getConnectionID());
+                return activeConnection.assignGuacamoleTunnel(address,
+                        new FailoverGuacamoleSocket(socket), socket.getConnectionID());
             else
-                return activeConnection.assignGuacamoleTunnel(socket, socket.getConnectionID());
+                return activeConnection.assignGuacamoleTunnel(address,
+                        socket, socket.getConnectionID());
             
         }
 
