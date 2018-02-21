@@ -435,6 +435,31 @@ angular.module('client').factory('ManagedClient', ['$rootScope', '$injector',
 
         };
 
+        // POC: Log received data for all "text/plain" pipe streams
+        client.onpipe = function pipeReceived(stream, mimetype, name) {
+
+            // For sake of this proof of concept, only handle text streams
+            if (mimetype !== 'text/plain') {
+                stream.sendAck('Only text streams are supported in this proof of concept.', Guacamole.Status.Code.UNSUPPORTED);
+                return;
+            }
+
+            // Log start of stream
+            var reader = new Guacamole.StringReader(stream);
+            console.log('pipe: %s: stream begins', name);
+
+            // Log each received blob of text
+            reader.ontext = function textReceived(text) {
+                console.log('pipe: %s: \"%s\"', name, text);
+            };
+
+            // Log end of stream
+            reader.onend = function streamEnded() {
+                console.log('pipe: %s: stream ends', name);
+            };
+
+        };
+
         // Handle any received clipboard data
         client.onclipboard = function clientClipboardReceived(stream, mimetype) {
 
