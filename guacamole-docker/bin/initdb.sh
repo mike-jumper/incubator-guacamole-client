@@ -37,7 +37,7 @@ DATABASE="$1"
 ##
 incorrect_usage() {
     cat <<END
-USAGE: /opt/guacamole/bin/initdb.sh [--postgres | --mysql]
+USAGE: /opt/guacamole/bin/initdb.sh [--postgres | --mysql | --sqlserver]
 END
     exit 1
 }
@@ -60,6 +60,10 @@ case $DATABASE in
 
     --mysql)
         cat /opt/guacamole/mysql/schema/*.sql
+        ;;
+
+    --sqlserver)
+        cat /opt/guacamole/sqlserver/schema/*.sql
         ;;
 
     *)

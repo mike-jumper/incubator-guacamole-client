@@ -106,6 +106,13 @@ echo "Downloading PostgreSQL JDBC driver ..."
 curl -L "https://jdbc.postgresql.org/download/postgresql-9.4-1201.jdbc41.jar" > "$DESTINATION/postgresql/postgresql-9.4-1201.jdbc41.jar"
 
 #
+# Download SQL Server JDBC driver
+#
+
+echo "Downloading SQL Server JDBC driver ..."
+curl -L "https://search.maven.org/remotecontent?filepath=com/microsoft/sqlserver/mssql-jdbc/7.0.0.jre8/mssql-jdbc-7.0.0.jre8.jar" > "$DESTINATION/sqlserver/mssql-jdbc-7.0.0.jre8.jar"
+
+#
 # Copy LDAP auth extension and schema modifications
 #
 

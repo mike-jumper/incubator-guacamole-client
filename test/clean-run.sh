@@ -34,6 +34,7 @@
 ##
 ##     "mysql"
 ##     "postgres"
+##     "sqlserver"
 ##
 
 ##
@@ -54,8 +55,9 @@ SUFFIX="guac-test-$$"
 ## but this can be overridden with the "-d DATABASE" option, where DATABASE
 ## is one of:
 ##
-##     mysql
-##     postgres
+##     "mysql"
+##     "postgres"
+##     "sqlserver"
 ##
 DATABASE="postgres"
 
@@ -71,7 +73,7 @@ invalid_usage() {
     cat <<END
 $MESSAGE
 
-USAGE: clean-run.sh [-C] [-d postgres|mysql]
+USAGE: clean-run.sh [-C] [-d postgres | mysql | sqlserver]
 END
     exit 1
 }
@@ -189,6 +191,12 @@ case "$DATABASE" in
         DATABASE_OPTS="-e MYSQL_ROOT_PASSWORD=secret"
         ;;
 
+    sqlserver)
+        DATABASE_VAR_PREFIX="SQLSERVER"
+        DATABASE_MODULE="guacamole-auth-jdbc-sqlserver"
+        DATABASE_OPTS="-e SA_PASSWORD=SecretPassword123 -e ACCEPT_EULA=Y"
+        ;;
+
     # Bail out if database is unknown
     *)
         invalid_usage "Unknown database type: $DATABASE"
@@ -229,7 +237,7 @@ docker network create "$NETWORK"
 docker run -d --rm --net "$NETWORK" --name "$DATABASE_CONTAINER" \
     -e GUACAMOLE_DB_NAME=guacamole_db                            \
     -e GUACAMOLE_DB_USER=guacamole_user                          \
-    -e GUACAMOLE_DB_PASSWORD=some_password                       \
+    -e GUACAMOLE_DB_PASSWORD=S0me_P@s5woRD                       \
     $DATABASE_OPTS                                               \
     "$DATABASE_TAG"
 
@@ -238,7 +246,7 @@ docker run -d --rm --net "$NETWORK" --name "$GUAC_CONTAINER"          \
     -e ${DATABASE_VAR_PREFIX}_HOSTNAME="$DATABASE_CONTAINER.$NETWORK" \
     -e ${DATABASE_VAR_PREFIX}_DATABASE=guacamole_db                   \
     -e ${DATABASE_VAR_PREFIX}_USER=guacamole_user                     \
-    -e ${DATABASE_VAR_PREFIX}_PASSWORD=some_password                  \
+    -e ${DATABASE_VAR_PREFIX}_PASSWORD=S0me_P@s5woRD                  \
     -e GUACD_HOSTNAME=localhost                                       \
     -e GUACD_PORT=4822                                                \
     "$GUAC_TAG"
