@@ -36,6 +36,13 @@
 ##     "postgres"
 ##     "sqlserver"
 ##
+## After the test script has finished, a copy of the Guacamole web application
+## logs can be found at:
+##
+##     target/clean-run/logs/guacamole.log
+##
+## Debug-level logging is enabled.
+##
 
 ##
 ## Whether the Docker image cache should be used. If the Docker image cache
@@ -256,10 +263,12 @@ docker run -d --rm --net "$NETWORK" --name "$DATABASE_CONTAINER" \
 
 # Start a Guacamole instance connected to that database
 docker run -d --net "$NETWORK" --name "$GUAC_CONTAINER"               \
+    -v "$BASE_DIR/test/debug-guacamole-home:/debug-guacamole-home"    \
     -e ${DATABASE_VAR_PREFIX}_HOSTNAME="$DATABASE_CONTAINER.$NETWORK" \
     -e ${DATABASE_VAR_PREFIX}_DATABASE=guacamole_db                   \
     -e ${DATABASE_VAR_PREFIX}_USER=guacamole_user                     \
     -e ${DATABASE_VAR_PREFIX}_PASSWORD=S0me_P@s5woRD                  \
+    -e GUACAMOLE_HOME=/debug-guacamole-home                           \
     -e GUACD_HOSTNAME=localhost                                       \
     -e GUACD_PORT=4822                                                \
     "$GUAC_TAG"
