@@ -23,6 +23,7 @@ import os
 import requests
 import sys
 import subprocess
+import time
 import urllib.parse
 
 parser = argparse.ArgumentParser(description='Authenticates with an '
@@ -30,6 +31,8 @@ parser = argparse.ArgumentParser(description='Authenticates with an '
     'environment that has the resulting auth token and data source '
     'identifier stored within environment variables.')
 
+parser.add_argument('--tries', default=12, type=int)
+parser.add_argument('--interval', default=5, type=int)
 parser.add_argument('--url', required=True)
 parser.add_argument('--username', required=True)
 parser.add_argument('--password', required=True)
@@ -46,15 +49,31 @@ if not base_url.endswith('/'):
 # Produce URL of authentication endpoint
 auth_url = urllib.parse.urljoin(base_url, 'api/tokens');
 
-# Attempt authentication using provided credentials
-response = requests.post(auth_url, data = {
-    "username" : args.username,
-    "password" : args.password
-});
+# Repeatedly attempt to authenticate (the backend database, etc. may not yet
+# be ready)
+for tries_remaining in reversed(range(args.tries)):
 
-# If authentication failed, bail out now
-if not response.ok:
-    sys.exit('Authentication failed.')
+    # Attempt authentication using provided credentials
+    try:
+        response = requests.post(auth_url, data = {
+            "username" : args.username,
+            "password" : args.password
+        });
+        if response.ok:
+            break
+
+    # Ignore failures, simply retrying later if the request is not successful
+    except requests.exceptions.RequestException:
+        pass
+
+    # If no more tries remain, give up now
+    if tries_remaining == 0:
+        sys.exit('Could not authenticate. Giving up.')
+
+    # Otherwise, wait a bit and retry
+    time.sleep(args.interval)
+    print('Authentication failed (HTTP {}). Retrying... ({} tries '
+            'remaining)'.format(response.status_code, tries_remaining))
 
 # Extract token and data source from authentication result, storing their
 # values as environment variables
