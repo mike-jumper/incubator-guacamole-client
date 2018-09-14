@@ -113,6 +113,15 @@ done
 BASE_DIR="$(realpath "$(dirname "$0")/..")"
 
 ##
+## The directory that the Guacamole web application logs should be saved to
+## upon completion of the test.
+##
+LOG_DIR="$BASE_DIR/target/clean-run/logs"
+
+# Ensure log directory exists
+mkdir -p "$LOG_DIR"
+
+##
 ## The name of the Docker network created by this script and shared by the
 ## Docker containers created by this script.
 ##
@@ -159,6 +168,10 @@ cleanup() {
 
     # Clean up network shared between containers
     docker network rm "$NETWORK" || true
+
+    # Save Guacamole logs and remove container
+    (docker logs "$GUAC_CONTAINER" &> "$LOG_DIR/guacamole.log") || true
+    docker rm "$GUAC_CONTAINER" || true
 
     # Clean up images if not using cache
     if [ "$USE_CACHE" -eq 0 ]; then
@@ -242,7 +255,7 @@ docker run -d --rm --net "$NETWORK" --name "$DATABASE_CONTAINER" \
     "$DATABASE_TAG"
 
 # Start a Guacamole instance connected to that database
-docker run -d --rm --net "$NETWORK" --name "$GUAC_CONTAINER"          \
+docker run -d --net "$NETWORK" --name "$GUAC_CONTAINER"               \
     -e ${DATABASE_VAR_PREFIX}_HOSTNAME="$DATABASE_CONTAINER.$NETWORK" \
     -e ${DATABASE_VAR_PREFIX}_DATABASE=guacamole_db                   \
     -e ${DATABASE_VAR_PREFIX}_USER=guacamole_user                     \
