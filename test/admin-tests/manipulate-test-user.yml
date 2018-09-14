@@ -1,0 +1,141 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+defaults:
+    query_parameters:
+        token: $ENVIRON['TOKEN']
+    request_headers:
+        content-type: application/json
+
+tests:
+
+    - name: verify TEST_USER1 does not exist
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users/TEST_USER1
+      status: 404
+
+    - name: create TEST_USER1
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/users
+      status: 200
+      data: >
+          {
+              "username" : "TEST_USER1",
+              "attributes" : {
+                  "guac-full-name" : "Test User1",
+                  "guac-email-address" : "tu1@example.net",
+                  "guac-organization" : "Example, Inc.",
+                  "guac-organizational-role" : "Test"
+              }
+          }
+
+      response_json_paths:
+        $.username: "TEST_USER1"
+        $.attributes.guac-full-name: "Test User1"
+        $.attributes.guac-email-address: "tu1@example.net"
+        $.attributes.guac-organization: "Example, Inc."
+        $.attributes.guac-organizational-role: "Test"
+
+    - name: verify TEST_USER1 was created
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users
+      status: 200
+      response_json_paths:
+          $.TEST_USER1.username: "TEST_USER1"
+
+    - name: grant TEST_USER1 permissions
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/users/TEST_USER1/permissions
+      status: 204
+      data: >
+          [
+              {
+                  "op": "add",
+                  "path": "/userPermissions/TEST_USER1",
+                  "value": "UPDATE"
+              },
+              {
+                  "op": "add",
+                  "path": "/systemPermissions",
+                  "value": "CREATE_USER"
+              },
+              {
+                  "op": "add",
+                  "path": "/systemPermissions",
+                  "value": "CREATE_CONNECTION"
+              },
+              {
+                  "op": "add",
+                  "path": "/systemPermissions",
+                  "value": "CREATE_CONNECTION_GROUP"
+              },
+              {
+                  "op": "add",
+                  "path": "/systemPermissions",
+                  "value": "CREATE_SHARING_PROFILE"
+              }
+          ]
+
+    - name: verify permissions granted to TEST_USER1
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users/TEST_USER1/permissions
+      status: 200
+      response_json_paths:
+          $.userPermissions.TEST_USER1[?((@)=="READ")]: "READ"
+          $.userPermissions.TEST_USER1[?((@)=="UPDATE")]: "UPDATE"
+          $.systemPermissions[?((@)=="CREATE_USER")]: "CREATE_USER"
+          $.systemPermissions[?((@)=="CREATE_CONNECTION")]: "CREATE_CONNECTION"
+          $.systemPermissions[?((@)=="CREATE_CONNECTION_GROUP")]: "CREATE_CONNECTION_GROUP"
+          $.systemPermissions[?((@)=="CREATE_SHARING_PROFILE")]: "CREATE_SHARING_PROFILE"
+
+    - name: revoke TEST_USER1 permissions
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/users/TEST_USER1/permissions
+      status: 204
+      data: >
+          [
+              {
+                  "op": "remove",
+                  "path": "/userPermissions/TEST_USER1",
+                  "value": "UPDATE"
+              },
+              {
+                  "op": "remove",
+                  "path": "/systemPermissions",
+                  "value": "CREATE_CONNECTION"
+              },
+              {
+                  "op": "remove",
+                  "path": "/systemPermissions",
+                  "value": "CREATE_SHARING_PROFILE"
+              }
+          ]
+
+    - name: verify permissions revoked from TEST_USER1
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users/TEST_USER1/permissions
+      status: 200
+      response_json_paths:
+          $.userPermissions.TEST_USER1[?((@)=="READ")]: "READ"
+          $.systemPermissions[?((@)=="CREATE_USER")]: "CREATE_USER"
+          $.systemPermissions[?((@)=="CREATE_CONNECTION_GROUP")]: "CREATE_CONNECTION_GROUP"
+
+          # FIXME: How do you test that a value/property ISN'T present???
+
+          #$.userPermissions.TEST_USER1[?((@)=="UPDATE")]: "UPDATE"
+          #$.systemPermissions[?((@)=="CREATE_CONNECTION")]: "CREATE_CONNECTION"
+          #$.systemPermissions[?((@)=="CREATE_SHARING_PROFILE")]: "CREATE_SHARING_PROFILE"
+
+    - name: delete TEST_USER1
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/users/TEST_USER1
+      status: 204
+
