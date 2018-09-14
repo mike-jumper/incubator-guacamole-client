@@ -83,7 +83,7 @@ token = auth_result['authToken']
 data_source = auth_result['dataSource']
 
 # Report success
-print('Successfully authenticated as "{}".'.format(username))
+print('Successfully authenticated as "{}" ({}).'.format(username, data_source))
 
 # Run provided command within updated environment
 os.environ['USERNAME'] = username
@@ -100,5 +100,5 @@ if not response.ok:
     sys.exit('Logout failed for user "{}".'.format(username))
 
 # All done
-print('Successfully logged out as "{}".'.format(username))
+print('Successfully logged out as "{}" ({}).'.format(username, data_source))
 
