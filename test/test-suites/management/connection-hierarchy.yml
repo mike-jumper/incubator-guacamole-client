@@ -1,0 +1,189 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+defaults:
+    query_parameters:
+        token: $ENVIRON['TOKEN']
+    request_headers:
+        content-type: application/json
+
+tests:
+
+    #
+    # Get root connection group
+    #
+
+    - name: get root group
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/connectionGroups/ROOT
+      status: 200
+
+    #
+    # Create hierarchy of connections and groups:
+    #
+    # ROOT:
+    #     Connection Group A
+    #         Connection Group B
+    #             Connection A
+    #             Connection B
+    #                 Read Only
+    #                 Full Access
+    #     Connection Group C
+    #
+
+    - name: create connection group A
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/connectionGroups
+      status: 200
+      data: >
+          {
+              "parentIdentifier" : "$HISTORY['get root group'].$RESPONSE['$.identifier']",
+              "name" : "Connection Group A",
+              "type" : "ORGANIZATIONAL",
+              "attributes" : {}
+          }
+
+    - name: create connection group B
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/connectionGroups
+      status: 200
+      data: >
+          {
+              "parentIdentifier" : "$HISTORY['create connection group A'].$RESPONSE['$.identifier']",
+              "name" : "Connection Group B",
+              "type" : "ORGANIZATIONAL",
+              "attributes" : {}
+          }
+
+    - name: create connection group C
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/connectionGroups
+      status: 200
+      data: >
+          {
+              "parentIdentifier" : "$HISTORY['get root group'].$RESPONSE['$.identifier']",
+              "name" : "Connection Group C",
+              "type" : "ORGANIZATIONAL",
+              "attributes" : {}
+          }
+
+    - name: create connection A
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/connections
+      status: 200
+      data: >
+          {
+              "parentIdentifier" : "$HISTORY['create connection group B'].$RESPONSE['$.identifier']",
+              "name" : "Connection A",
+              "protocol" : "vnc",
+              "attributes" : {},
+              "parameters" : {}
+          }
+
+    - name: create connection B
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/connections
+      status: 200
+      data: >
+          {
+              "parentIdentifier" : "$HISTORY['create connection group B'].$RESPONSE['$.identifier']",
+              "name" : "Connection B",
+              "protocol" : "vnc",
+              "attributes" : {},
+              "parameters" : {}
+          }
+
+    - name: create read-only sharing profile
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/sharingProfiles
+      status: 200
+      data: >
+          {
+              "primaryConnectionIdentifier" : "$HISTORY['create connection B'].$RESPONSE['$.identifier']",
+              "name" : "Read Only",
+              "attributes" : {},
+              "parameters" : {
+                  "read-only" : "true"
+              }
+          }
+
+    - name: create full-access sharing profile
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/sharingProfiles
+      status: 200
+      data: >
+          {
+              "primaryConnectionIdentifier" : "$HISTORY['create connection B'].$RESPONSE['$.identifier']",
+              "name" : "Full Access",
+              "attributes" : {},
+              "parameters" : {}
+          }
+
+    #
+    # Verify hierarchy
+    #
+    # ROOT:
+    #     Connection Group A
+    #         Connection Group B
+    #             Connection A
+    #             Connection B
+    #                 Read Only
+    #                 Full Access
+    #     Connection Group C
+    #
+
+    - name: verify constructed hierarchy
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/connectionGroups/ROOT/tree
+      status: 200
+
+
+      #
+      # The below is failing with what appears to be an internal error in
+      # jsonpath_rw:
+      #
+      #     "TypeError: 'DatumInContext' object is not iterable"
+      #
+
+#      response_json_paths:
+#          $..childConnections[*].name.`sorted`:
+#              - Connection A
+#              - Connection B
+#          $..childConnectionGroups[*].name.`sorted`:
+#              - Connection Group A
+#              - Connection Group B
+#              - Connection Group C
+#          $..sharingProfiles[*].name.`sorted`:
+#              - Full Access
+#              - Read Only
+#          $.childConnectionGroups[*].name.`sorted`:
+#              - Connection Group A
+#              - Connection Group C
+#          $..childConnectionGroups[?(@.name=="Connection Group A")].childConnectionGroups[*].name.`sorted`:
+#              - Connection Group B
+#          $..childConnectionGroups[?(@.name=="Connection Group B")].childConnections[*].name.`sorted`:
+#              - Connection A
+#              - Connection B
+#          $..childConnections[?(@.name=="Connection B")].sharingProfiles[*].name.`sorted`:
+#              - Full Access
+#              - Read Only
+
+    #
+    # Clean up
+    #
+
+    - name: delete connection group A
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/connectionGroups/$HISTORY['create connection group A'].$RESPONSE['$.identifier']
+      status: 204
+
+    - name: delete connection group C
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/connectionGroups/$HISTORY['create connection group C'].$RESPONSE['$.identifier']
+      status: 204
+
