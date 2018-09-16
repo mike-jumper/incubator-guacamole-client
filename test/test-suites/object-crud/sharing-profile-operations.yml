@@ -1,0 +1,222 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+defaults:
+    query_parameters:
+        token: $ENVIRON['TOKEN']
+    request_headers:
+        content-type: application/json
+
+tests:
+
+    #
+    # Create user which will receive permissions related to test object
+    #
+
+    - name: verify AffectedUser does not exist
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser
+      status: 404
+
+    - name: create AffectedUser
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/users
+      status: 200
+      data: >
+          {
+              "username" : "AffectedUser",
+              "attributes" : {}
+          }
+
+    #
+    # Get root connection group
+    #
+
+    - name: get root group
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/connectionGroups/ROOT
+      status: 200
+
+    #
+    # Create primary connection for sharing profile
+    #
+
+    - name: create primary connection
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/connections
+      status: 200
+      data: >
+          {
+              "parentIdentifier" : "$RESPONSE['$.identifier']",
+              "name" : "Primary Connection",
+              "protocol" : "vnc",
+              "attributes" : {},
+              "parameters" : {
+                  "hostname" : "localhost",
+                  "port" : "5901"
+              }
+          }
+
+      response_json_paths:
+          $.name: "Primary Connection"
+          $.protocol: "vnc"
+
+    #
+    # Create test object
+    #
+
+    - name: create object
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/sharingProfiles
+      status: 200
+      data: >
+          {
+              "primaryConnectionIdentifier" : "$RESPONSE['$.identifier']",
+              "name" : "Read Only",
+              "attributes" : {},
+              "parameters" : {
+                  "read-only" : "true"
+              }
+          }
+
+      response_json_paths:
+          $.name: "Read Only"
+
+    - name: verify object was created
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/sharingProfiles
+      status: 200
+      response_json_paths:
+          $["$RESPONSE['$.identifier']"].name: "Read Only"
+
+    - name: verify sharing profile parameters
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/sharingProfiles/$HISTORY['create object'].$RESPONSE['$.identifier']/parameters
+      status: 200
+      response_json_paths:
+          $: {
+              "read-only" : "true"
+          }
+
+    #
+    # Modify test object
+    #
+
+    - name: modify object
+      PUT: /api/session/data/$ENVIRON['DATASOURCE']/sharingProfiles/$HISTORY['create object'].$RESPONSE['$.identifier']
+      status: 204
+      data: >
+          {
+              "primaryConnectionIdentifier" : "$HISTORY['create primary connection'].$RESPONSE['$.identifier']",
+              "name" : "Full Access",
+              "attributes" : {},
+              "parameters" : {}
+          }
+
+    - name: verify object was modified
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/sharingProfiles/$HISTORY['create object'].$RESPONSE['$.identifier']
+      status: 200
+      response_json_paths:
+          $.name: "Full Access"
+
+    - name: verify sharing profile parameters were modified
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/sharingProfiles/$HISTORY['create object'].$RESPONSE['$.identifier']/parameters
+      status: 200
+      response_json_paths:
+          $: {}
+
+    #
+    # Grant permissions related to test object
+    #
+
+    - name: grant object permissions
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
+      status: 204
+      data: >
+          [
+              {
+                  "op": "add",
+                  "path": "/sharingProfilePermissions/$HISTORY['create object'].$RESPONSE['$.identifier']",
+                  "value": "READ"
+              },
+              {
+                  "op": "add",
+                  "path": "/sharingProfilePermissions/$HISTORY['create object'].$RESPONSE['$.identifier']",
+                  "value": "UPDATE"
+              },
+              {
+                  "op": "add",
+                  "path": "/sharingProfilePermissions/$HISTORY['create object'].$RESPONSE['$.identifier']",
+                  "value": "DELETE"
+              },
+              {
+                  "op": "add",
+                  "path": "/sharingProfilePermissions/$HISTORY['create object'].$RESPONSE['$.identifier']",
+                  "value": "ADMINISTER"
+              }
+          ]
+
+    - name: verify permissions granted
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
+      status: 200
+      response_json_paths:
+          $.sharingProfilePermissions["$HISTORY['create object'].$RESPONSE['$.identifier']"].`sorted`:
+              - ADMINISTER
+              - DELETE
+              - READ
+              - UPDATE
+
+    #
+    # Revoke permissions related to test object
+    #
+
+    - name: revoke object permissions
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
+      status: 204
+      data: >
+          [
+              {
+                  "op": "remove",
+                  "path": "/sharingProfilePermissions/$HISTORY['create object'].$RESPONSE['$.identifier']",
+                  "value": "UPDATE"
+              },
+              {
+                  "op": "remove",
+                  "path": "/sharingProfilePermissions/$HISTORY['create object'].$RESPONSE['$.identifier']",
+                  "value": "DELETE"
+              }
+          ]
+
+    - name: verify permissions revoked
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
+      status: 200
+      response_json_paths:
+          $.sharingProfilePermissions["$HISTORY['create object'].$RESPONSE['$.identifier']"].`sorted`:
+              - ADMINISTER
+              - READ
+
+    #
+    # Clean up
+    #
+
+    - name: delete AffectedUser
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser
+      status: 204
+
+    - name: delete object
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/sharingProfiles/$HISTORY['create object'].$RESPONSE['$.identifier']
+      status: 204
+
+    - name: delete primary connection
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/connections/$HISTORY['create primary connection'].$RESPONSE['$.identifier']
+      status: 204
+
