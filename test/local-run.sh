@@ -76,14 +76,17 @@ cd "$(dirname "$0")"
 ./util/wait-for-guac.py "$GUACAMOLE_URL"
 
 # Prepare test environment
+echo_header "Preparing environment"
 ./util/run-as.py --username=guacadmin --password=guacadmin \
     --url="$GUACAMOLE_URL" -- gabbi-run "$GUACAMOLE_URL" -- test-suites/prepare/*.yml
 
 # Run all object CRUD tests as guacadmin (full sysadmin user)
+echo_header "Running object CRUD tests as full system-level admin"
 ./util/run-as.py --username=guacadmin --password=guacadmin \
     --url="$GUACAMOLE_URL" -- gabbi-run "$GUACAMOLE_URL" -- test-suites/object-crud/*.yml
 
 # Run all object CRUD tests as testadmin (normal user with admin permissions)
+echo_header "Running object CRUD tests as normal user with admin permissions"
 ./util/run-as.py --username=testadmin --password=testadmin \
     --url="$GUACAMOLE_URL" -- gabbi-run "$GUACAMOLE_URL" -- test-suites/object-crud/*.yml
 
