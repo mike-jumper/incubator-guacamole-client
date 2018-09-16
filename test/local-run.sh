@@ -80,15 +80,15 @@ echo_header "Preparing environment"
 ./util/run-as.py --username=guacadmin --password=guacadmin \
     --url="$GUACAMOLE_URL" -- gabbi-run "$GUACAMOLE_URL" -- test-suites/prepare/*.yml
 
-# Run all object CRUD tests as guacadmin (full sysadmin user)
-echo_header "Running object CRUD tests as full system-level admin"
+# Run all management tests as guacadmin (full sysadmin user)
+echo_header "Running management tests as full system-level admin"
 ./util/run-as.py --username=guacadmin --password=guacadmin \
-    --url="$GUACAMOLE_URL" -- gabbi-run "$GUACAMOLE_URL" -- test-suites/object-crud/*.yml
+    --url="$GUACAMOLE_URL" -- gabbi-run "$GUACAMOLE_URL" -- test-suites/management/*.yml
 
-# Run all object CRUD tests as testadmin (normal user with admin permissions)
-echo_header "Running object CRUD tests as normal user with admin permissions"
+# Run all management tests as testadmin (normal user with admin permissions)
+echo_header "Running management tests as normal user with admin permissions"
 ./util/run-as.py --username=testadmin --password=testadmin \
-    --url="$GUACAMOLE_URL" -- gabbi-run "$GUACAMOLE_URL" -- test-suites/object-crud/*.yml
+    --url="$GUACAMOLE_URL" -- gabbi-run "$GUACAMOLE_URL" -- test-suites/management/*.yml
 
 #
 # If we got this far, all tests passed!
