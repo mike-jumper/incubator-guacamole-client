@@ -75,6 +75,11 @@ tests:
               {
                   "op": "add",
                   "path": "/systemPermissions",
+                  "value": "CREATE_USER_GROUP"
+              },
+              {
+                  "op": "add",
+                  "path": "/systemPermissions",
                   "value": "CREATE_CONNECTION"
               },
               {
@@ -93,10 +98,13 @@ tests:
       GET: /api/session/data/$ENVIRON['DATASOURCE']/users/testadmin/permissions
       status: 200
       response_json_paths:
-          $.userPermissions.testadmin[?((@)=="READ")]: "READ"
-          $.userPermissions.testadmin[?((@)=="UPDATE")]: "UPDATE"
-          $.systemPermissions[?((@)=="CREATE_USER")]: "CREATE_USER"
-          $.systemPermissions[?((@)=="CREATE_CONNECTION")]: "CREATE_CONNECTION"
-          $.systemPermissions[?((@)=="CREATE_CONNECTION_GROUP")]: "CREATE_CONNECTION_GROUP"
-          $.systemPermissions[?((@)=="CREATE_SHARING_PROFILE")]: "CREATE_SHARING_PROFILE"
+          $.userPermissions.testadmin.`sorted`:
+              - READ
+              - UPDATE
+          $.systemPermissions.`sorted`:
+              - CREATE_CONNECTION
+              - CREATE_CONNECTION_GROUP
+              - CREATE_SHARING_PROFILE
+              - CREATE_USER
+              - CREATE_USER_GROUP
 
