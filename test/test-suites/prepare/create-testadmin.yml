@@ -1,0 +1,102 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+defaults:
+    query_parameters:
+        token: $ENVIRON['TOKEN']
+    request_headers:
+        content-type: application/json
+
+tests:
+
+    #
+    # Create "testadmin" user
+    #
+
+    - name: verify testadmin does not exist
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users/testadmin
+      status: 404
+
+    - name: create testadmin
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/users
+      status: 200
+      data: >
+          {
+              "username" : "testadmin",
+              "password" : "testadmin",
+              "attributes" : {}
+          }
+
+      response_json_paths:
+        $.username: "testadmin"
+
+    - name: verify testadmin was created
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users
+      status: 200
+      response_json_paths:
+          $.testadmin.username: "testadmin"
+
+    #
+    # Give "testadmin" administrative, system-level permissions, but do NOT
+    # grant full sysadmin permission
+    #
+
+    - name: grant testadmin explicit admin permissions
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/users/testadmin/permissions
+      status: 204
+      data: >
+          [
+              {
+                  "op": "add",
+                  "path": "/userPermissions/testadmin",
+                  "value": "UPDATE"
+              },
+              {
+                  "op": "add",
+                  "path": "/systemPermissions",
+                  "value": "CREATE_USER"
+              },
+              {
+                  "op": "add",
+                  "path": "/systemPermissions",
+                  "value": "CREATE_CONNECTION"
+              },
+              {
+                  "op": "add",
+                  "path": "/systemPermissions",
+                  "value": "CREATE_CONNECTION_GROUP"
+              },
+              {
+                  "op": "add",
+                  "path": "/systemPermissions",
+                  "value": "CREATE_SHARING_PROFILE"
+              }
+          ]
+
+    - name: verify permissions granted to testadmin
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users/testadmin/permissions
+      status: 200
+      response_json_paths:
+          $.userPermissions.testadmin[?((@)=="READ")]: "READ"
+          $.userPermissions.testadmin[?((@)=="UPDATE")]: "UPDATE"
+          $.systemPermissions[?((@)=="CREATE_USER")]: "CREATE_USER"
+          $.systemPermissions[?((@)=="CREATE_CONNECTION")]: "CREATE_CONNECTION"
+          $.systemPermissions[?((@)=="CREATE_CONNECTION_GROUP")]: "CREATE_CONNECTION_GROUP"
+          $.systemPermissions[?((@)=="CREATE_SHARING_PROFILE")]: "CREATE_SHARING_PROFILE"
+

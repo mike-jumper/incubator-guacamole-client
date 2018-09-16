@@ -36,13 +36,60 @@ if [ -z "$GUACAMOLE_URL" ]; then
     exit 1
 fi
 
+##
+## Prints an arbitrary message, clearly highlighting the message with a text
+## art box and blank lines.
+##
+## @param MESSAGE
+##     The message to display.
+##
+echo_header() {
+
+    MESSAGE="$*"
+    LINE="`sed s/./-/g <<<"$MESSAGE"`"
+
+    cat <<END
+
++-$LINE-+
+| $MESSAGE |
++-$LINE-+
+
+END
+}
+
+#
+# Notify that the tests are now actually beginning
+#
+
+echo_header "Beginning tests"
+
+#
+# Print a clear warning if tests fail
+#
+
+trap 'echo_header "FAILED :("' ERR
+
 # Ensure the current directory is directory containing this script
 cd "$(dirname "$0")"
 
 # Wait for Apache Guacamole to become ready
 ./util/wait-for-guac.py "$GUACAMOLE_URL"
 
-# Run all tests as guacadmin
+# Prepare test environment
 ./util/run-as.py --username=guacadmin --password=guacadmin \
-    --url="$GUACAMOLE_URL" -- gabbi-run "$GUACAMOLE_URL" -- admin-tests/*.yml
+    --url="$GUACAMOLE_URL" -- gabbi-run "$GUACAMOLE_URL" -- test-suites/prepare/*.yml
+
+# Run all object CRUD tests as guacadmin (full sysadmin user)
+./util/run-as.py --username=guacadmin --password=guacadmin \
+    --url="$GUACAMOLE_URL" -- gabbi-run "$GUACAMOLE_URL" -- test-suites/object-crud/*.yml
+
+# Run all object CRUD tests as testadmin (normal user with admin permissions)
+./util/run-as.py --username=testadmin --password=testadmin \
+    --url="$GUACAMOLE_URL" -- gabbi-run "$GUACAMOLE_URL" -- test-suites/object-crud/*.yml
+
+#
+# If we got this far, all tests passed!
+#
+
+echo_header "SUCCESS! :)"
 

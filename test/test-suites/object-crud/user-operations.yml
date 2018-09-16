@@ -1,0 +1,192 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+defaults:
+    query_parameters:
+        token: $ENVIRON['TOKEN']
+    request_headers:
+        content-type: application/json
+
+tests:
+
+    #
+    # Create user which will receive permissions related to test object
+    #
+
+    - name: verify AffectedUser does not exist
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser
+      status: 404
+
+    - name: create AffectedUser
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/users
+      status: 200
+      data: >
+          {
+              "username" : "AffectedUser",
+              "attributes" : {}
+          }
+
+    #
+    # Create test object
+    #
+
+    - name: verify TestUser does not exist
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users/TestUser
+      status: 404
+
+    - name: create TestUser
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/users
+      status: 200
+      data: >
+          {
+              "username" : "TestUser",
+              "attributes" : {
+                  "guac-full-name" : "Test User",
+                  "guac-email-address" : "test.user@example.net",
+                  "guac-organization" : "Example, Inc.",
+                  "guac-organizational-role" : "Test"
+              }
+          }
+
+      response_json_paths:
+          $.username: "TestUser"
+          $.attributes.guac-full-name: "Test User"
+          $.attributes.guac-email-address: "test.user@example.net"
+          $.attributes.guac-organization: "Example, Inc."
+          $.attributes.guac-organizational-role: "Test"
+
+    - name: verify TestUser was created
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users
+      status: 200
+      response_json_paths:
+          $.TestUser.username: "TestUser"
+          $.TestUser.attributes.guac-full-name: "Test User"
+          $.TestUser.attributes.guac-email-address: "test.user@example.net"
+          $.TestUser.attributes.guac-organization: "Example, Inc."
+          $.TestUser.attributes.guac-organizational-role: "Test"
+
+    #
+    # Modify test object
+    #
+
+    - name: modify TestUser
+      PUT: /api/session/data/$ENVIRON['DATASOURCE']/users/TestUser
+      status: 204
+      data: >
+          {
+              "attributes" : {
+                  "guac-full-name" : "User for Testing",
+                  "guac-email-address" : "test.user@example.net",
+                  "guac-organization" : "Example, Inc.",
+                  "guac-organizational-role" : "User"
+              }
+          }
+
+    - name: verify TestUser was modified
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users
+      status: 200
+      response_json_paths:
+          $.TestUser.username: "TestUser"
+          $.TestUser.attributes.guac-full-name: "User for Testing"
+          $.TestUser.attributes.guac-email-address: "test.user@example.net"
+          $.TestUser.attributes.guac-organization: "Example, Inc."
+          $.TestUser.attributes.guac-organizational-role: "User"
+
+    #
+    # Grant permissions related to test object
+    #
+
+    - name: grant permissions related to TestUser
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
+      status: 204
+      data: >
+          [
+              {
+                  "op": "add",
+                  "path": "/userPermissions/TestUser",
+                  "value": "READ"
+              },
+              {
+                  "op": "add",
+                  "path": "/userPermissions/TestUser",
+                  "value": "UPDATE"
+              },
+              {
+                  "op": "add",
+                  "path": "/userPermissions/TestUser",
+                  "value": "DELETE"
+              },
+              {
+                  "op": "add",
+                  "path": "/userPermissions/TestUser",
+                  "value": "ADMINISTER"
+              }
+          ]
+
+    - name: verify permissions granted
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
+      status: 200
+      response_json_paths:
+          $.userPermissions.TestUser[?((@)=="READ")]: "READ"
+          $.userPermissions.TestUser[?((@)=="UPDATE")]: "UPDATE"
+          $.userPermissions.TestUser[?((@)=="DELETE")]: "DELETE"
+          $.userPermissions.TestUser[?((@)=="ADMINISTER")]: "ADMINISTER"
+
+    #
+    # Revoke permissions related to test object
+    #
+
+    - name: revoke TestUser permissions
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
+      status: 204
+      data: >
+          [
+              {
+                  "op": "remove",
+                  "path": "/userPermissions/TestUser",
+                  "value": "UPDATE"
+              },
+              {
+                  "op": "remove",
+                  "path": "/userPermissions/TestUser",
+                  "value": "DELETE"
+              }
+          ]
+
+    - name: verify permissions revoked
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
+      status: 200
+      response_json_paths:
+          $.userPermissions.TestUser[?((@)=="READ")]: "READ"
+          $.userPermissions.TestUser[?((@)=="ADMINISTER")]: "ADMINISTER"
+
+          # FIXME: How do you test that a value/property ISN'T present???
+
+    #
+    # Clean up
+    #
+
+    - name: delete AffectedUser
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser
+      status: 204
+
+    - name: delete TestUser
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/users/TestUser
+      status: 204
+

@@ -47,7 +47,7 @@ COPY util/ /opt/guacamole/test/util
 # Copy REST service tests
 #
 
-COPY admin-tests /opt/guacamole/test/admin-tests
+COPY test-suites /opt/guacamole/test/test-suites
 
 #
 # Container should run tests upon startup
