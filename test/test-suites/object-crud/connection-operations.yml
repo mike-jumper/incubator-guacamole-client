@@ -166,10 +166,11 @@ tests:
       GET: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
       status: 200
       response_json_paths:
-          $.connectionPermissions["$HISTORY['create object'].$RESPONSE['$.identifier']"][?((@)=="READ")]: "READ"
-          $.connectionPermissions["$HISTORY['create object'].$RESPONSE['$.identifier']"][?((@)=="UPDATE")]: "UPDATE"
-          $.connectionPermissions["$HISTORY['create object'].$RESPONSE['$.identifier']"][?((@)=="DELETE")]: "DELETE"
-          $.connectionPermissions["$HISTORY['create object'].$RESPONSE['$.identifier']"][?((@)=="ADMINISTER")]: "ADMINISTER"
+          $.connectionPermissions["$HISTORY['create object'].$RESPONSE['$.identifier']"].`sorted`:
+              - ADMINISTER
+              - DELETE
+              - READ
+              - UPDATE
 
     #
     # Revoke permissions related to test object
@@ -196,10 +197,9 @@ tests:
       GET: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
       status: 200
       response_json_paths:
-          $.connectionPermissions["$HISTORY['create object'].$RESPONSE['$.identifier']"][?((@)=="READ")]: "READ"
-          $.connectionPermissions["$HISTORY['create object'].$RESPONSE['$.identifier']"][?((@)=="ADMINISTER")]: "ADMINISTER"
-
-          # FIXME: How do you test that a value/property ISN'T present???
+          $.connectionPermissions["$HISTORY['create object'].$RESPONSE['$.identifier']"].`sorted`:
+              - ADMINISTER
+              - READ
 
     #
     # Clean up

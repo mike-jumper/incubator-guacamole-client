@@ -143,10 +143,11 @@ tests:
       GET: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
       status: 200
       response_json_paths:
-          $.userPermissions.TestUser[?((@)=="READ")]: "READ"
-          $.userPermissions.TestUser[?((@)=="UPDATE")]: "UPDATE"
-          $.userPermissions.TestUser[?((@)=="DELETE")]: "DELETE"
-          $.userPermissions.TestUser[?((@)=="ADMINISTER")]: "ADMINISTER"
+          $.userPermissions.TestUser.`sorted`:
+              - ADMINISTER
+              - DELETE
+              - READ
+              - UPDATE
 
     #
     # Revoke permissions related to test object
@@ -173,10 +174,9 @@ tests:
       GET: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
       status: 200
       response_json_paths:
-          $.userPermissions.TestUser[?((@)=="READ")]: "READ"
-          $.userPermissions.TestUser[?((@)=="ADMINISTER")]: "ADMINISTER"
-
-          # FIXME: How do you test that a value/property ISN'T present???
+          $.userPermissions.TestUser.`sorted`:
+              - ADMINISTER
+              - READ
 
     #
     # Clean up
