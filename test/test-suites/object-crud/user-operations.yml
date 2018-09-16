@@ -46,11 +46,11 @@ tests:
     # Create test object
     #
 
-    - name: verify TestUser does not exist
+    - name: verify object does not exist
       GET: /api/session/data/$ENVIRON['DATASOURCE']/users/TestUser
       status: 404
 
-    - name: create TestUser
+    - name: create object 
       POST: /api/session/data/$ENVIRON['DATASOURCE']/users
       status: 200
       data: >
@@ -71,7 +71,7 @@ tests:
           $.attributes.guac-organization: "Example, Inc."
           $.attributes.guac-organizational-role: "Test"
 
-    - name: verify TestUser was created
+    - name: verify object was created
       GET: /api/session/data/$ENVIRON['DATASOURCE']/users
       status: 200
       response_json_paths:
@@ -85,7 +85,7 @@ tests:
     # Modify test object
     #
 
-    - name: modify TestUser
+    - name: modify object 
       PUT: /api/session/data/$ENVIRON['DATASOURCE']/users/TestUser
       status: 204
       data: >
@@ -98,7 +98,7 @@ tests:
               }
           }
 
-    - name: verify TestUser was modified
+    - name: verify object was modified
       GET: /api/session/data/$ENVIRON['DATASOURCE']/users
       status: 200
       response_json_paths:
@@ -112,7 +112,7 @@ tests:
     # Grant permissions related to test object
     #
 
-    - name: grant permissions related to TestUser
+    - name: grant object permissions
       PATCH: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
       status: 204
       data: >
@@ -152,7 +152,7 @@ tests:
     # Revoke permissions related to test object
     #
 
-    - name: revoke TestUser permissions
+    - name: revoke object permissions
       PATCH: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
       status: 204
       data: >
@@ -186,7 +186,7 @@ tests:
       DELETE: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser
       status: 204
 
-    - name: delete TestUser
+    - name: delete object
       DELETE: /api/session/data/$ENVIRON['DATASOURCE']/users/TestUser
       status: 204
 

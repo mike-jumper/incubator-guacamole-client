@@ -1,0 +1,215 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+defaults:
+    query_parameters:
+        token: $ENVIRON['TOKEN']
+    request_headers:
+        content-type: application/json
+
+tests:
+
+    #
+    # Create user which will receive permissions related to test object
+    #
+
+    - name: verify AffectedUser does not exist
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser
+      status: 404
+
+    - name: create AffectedUser
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/users
+      status: 200
+      data: >
+          {
+              "username" : "AffectedUser",
+              "attributes" : {}
+          }
+
+    #
+    # Get root connection group
+    #
+
+    - name: get root group
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/connectionGroups/ROOT
+      status: 200
+
+    #
+    # Create test object
+    #
+
+    - name: create object
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/connections
+      status: 200
+      data: >
+          {
+              "parentIdentifier" : "$RESPONSE['$.identifier']",
+              "name" : "Test Connection",
+              "protocol" : "vnc",
+              "attributes" : {
+                  "max-connections" : "2"
+              },
+              "parameters" : {
+                  "hostname" : "localhost",
+                  "port" : "5901"
+              }
+          }
+
+      response_json_paths:
+          $.name: "Test Connection"
+          $.protocol: "vnc"
+          $.attributes.max-connections: "2"
+
+    - name: verify object was created
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/connections
+      status: 200
+      response_json_paths:
+          $["$RESPONSE['$.identifier']"].name: "Test Connection"
+          $["$RESPONSE['$.identifier']"].protocol: "vnc"
+          $["$RESPONSE['$.identifier']"].attributes.max-connections: "2"
+
+    - name: verify connection parameters
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/connections/$HISTORY['create object'].$RESPONSE['$.identifier']/parameters
+      status: 200
+      response_json_paths:
+          $: {
+              "hostname" : "localhost",
+              "port" : "5901"
+          }
+
+    #
+    # Modify test object
+    #
+
+    - name: modify object
+      PUT: /api/session/data/$ENVIRON['DATASOURCE']/connections/$HISTORY['create object'].$RESPONSE['$.identifier']
+      status: 204
+      data: >
+          {
+              "parentIdentifier" : "$HISTORY['get root group'].$RESPONSE['$.identifier']",
+              "name" : "Renamed Connection",
+              "protocol" : "rdp",
+              "attributes" : {
+                  "max-connections" : "1"
+              },
+              "parameters" : {
+                  "hostname" : "localhost",
+                  "port" : "3389"
+              }
+          }
+
+    - name: verify object was modified
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/connections/$HISTORY['create object'].$RESPONSE['$.identifier']
+      status: 200
+      response_json_paths:
+          $.name: "Renamed Connection"
+          $.protocol: "rdp"
+          $.attributes.max-connections: "1"
+
+    - name: verify connection parameters were modified
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/connections/$HISTORY['create object'].$RESPONSE['$.identifier']/parameters
+      status: 200
+      response_json_paths:
+          $: {
+              "hostname" : "localhost",
+              "port" : "3389"
+          }
+
+    #
+    # Grant permissions related to test object
+    #
+
+    - name: grant object permissions
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
+      status: 204
+      data: >
+          [
+              {
+                  "op": "add",
+                  "path": "/connectionPermissions/$HISTORY['create object'].$RESPONSE['$.identifier']",
+                  "value": "READ"
+              },
+              {
+                  "op": "add",
+                  "path": "/connectionPermissions/$HISTORY['create object'].$RESPONSE['$.identifier']",
+                  "value": "UPDATE"
+              },
+              {
+                  "op": "add",
+                  "path": "/connectionPermissions/$HISTORY['create object'].$RESPONSE['$.identifier']",
+                  "value": "DELETE"
+              },
+              {
+                  "op": "add",
+                  "path": "/connectionPermissions/$HISTORY['create object'].$RESPONSE['$.identifier']",
+                  "value": "ADMINISTER"
+              }
+          ]
+
+    - name: verify permissions granted
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
+      status: 200
+      response_json_paths:
+          $.connectionPermissions["$HISTORY['create object'].$RESPONSE['$.identifier']"][?((@)=="READ")]: "READ"
+          $.connectionPermissions["$HISTORY['create object'].$RESPONSE['$.identifier']"][?((@)=="UPDATE")]: "UPDATE"
+          $.connectionPermissions["$HISTORY['create object'].$RESPONSE['$.identifier']"][?((@)=="DELETE")]: "DELETE"
+          $.connectionPermissions["$HISTORY['create object'].$RESPONSE['$.identifier']"][?((@)=="ADMINISTER")]: "ADMINISTER"
+
+    #
+    # Revoke permissions related to test object
+    #
+
+    - name: revoke object permissions
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
+      status: 204
+      data: >
+          [
+              {
+                  "op": "remove",
+                  "path": "/connectionPermissions/$HISTORY['create object'].$RESPONSE['$.identifier']",
+                  "value": "UPDATE"
+              },
+              {
+                  "op": "remove",
+                  "path": "/connectionPermissions/$HISTORY['create object'].$RESPONSE['$.identifier']",
+                  "value": "DELETE"
+              }
+          ]
+
+    - name: verify permissions revoked
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
+      status: 200
+      response_json_paths:
+          $.connectionPermissions["$HISTORY['create object'].$RESPONSE['$.identifier']"][?((@)=="READ")]: "READ"
+          $.connectionPermissions["$HISTORY['create object'].$RESPONSE['$.identifier']"][?((@)=="ADMINISTER")]: "ADMINISTER"
+
+          # FIXME: How do you test that a value/property ISN'T present???
+
+    #
+    # Clean up
+    #
+
+    - name: delete AffectedUser
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser
+      status: 204
+
+    - name: delete object
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/connections/$HISTORY['create object'].$RESPONSE['$.identifier']
+      status: 204
+
