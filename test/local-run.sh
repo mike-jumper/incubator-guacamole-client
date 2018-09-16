@@ -80,6 +80,11 @@ echo_header "Preparing environment"
 ./util/run-as.py --username=guacadmin --password=guacadmin \
     --url="$GUACAMOLE_URL" -- gabbi-run "$GUACAMOLE_URL" -- test-suites/prepare/*.yml
 
+# Run tests which require sysadmin privileges
+echo_header "Running system administrator tests"
+./util/run-as.py --username=guacadmin --password=guacadmin \
+    --url="$GUACAMOLE_URL" -- gabbi-run "$GUACAMOLE_URL" -- test-suites/sysadmin/*.yml
+
 # Run all management tests as guacadmin (full sysadmin user)
 echo_header "Running management tests as full system-level admin"
 ./util/run-as.py --username=guacadmin --password=guacadmin \
