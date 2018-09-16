@@ -1,0 +1,253 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+defaults:
+    query_parameters:
+        token: $ENVIRON['TOKEN']
+    request_headers:
+        content-type: application/json
+
+tests:
+
+    #
+    # Create test objects
+    #
+
+    - name: create MemberGroup1
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/userGroups
+      status: 200
+      data: >
+          {
+              "identifier" : "MemberGroup1",
+              "attributes" : {}
+          }
+
+    - name: create MemberGroup2
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/userGroups
+      status: 200
+      data: >
+          {
+              "identifier" : "MemberGroup2",
+              "attributes" : {}
+          }
+
+    - name: create MemberGroup3
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/userGroups
+      status: 200
+      data: >
+          {
+              "identifier" : "MemberGroup3",
+              "attributes" : {}
+          }
+
+    - name: create MemberGroup4
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/userGroups
+      status: 200
+      data: >
+          {
+              "identifier" : "MemberGroup4",
+              "attributes" : {}
+          }
+
+    - name: create ParentGroup
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/userGroups
+      status: 200
+      data: >
+          {
+              "identifier" : "ParentGroup",
+              "attributes" : {}
+          }
+
+    #
+    # Set initial memberships
+    #
+
+    - name: set members of ParentGroup
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/ParentGroup/memberUserGroups
+      status: 204
+      data: >
+          [
+              {
+                  "op": "add",
+                  "path": "/",
+                  "value": "MemberGroup1"
+              },
+              {
+                  "op": "add",
+                  "path": "/",
+                  "value": "MemberGroup2"
+              }
+          ]
+
+    - name: set parent of MemberGroup3
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/MemberGroup3/userGroups
+      status: 204
+      data: >
+          [
+              {
+                  "op": "add",
+                  "path": "/",
+                  "value": "ParentGroup"
+              }
+          ]
+
+    - name: set parent of MemberGroup4
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/MemberGroup4/userGroups
+      status: 204
+      data: >
+          [
+              {
+                  "op": "add",
+                  "path": "/",
+                  "value": "ParentGroup"
+              }
+          ]
+
+    #
+    # Verify memberships
+    #
+
+    - name: verify members of ParentGroup
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/ParentGroup/memberUserGroups
+      status: 200
+      response_json_paths:
+          $.`sorted`:
+              - MemberGroup1
+              - MemberGroup2
+              - MemberGroup3
+              - MemberGroup4
+
+    - name: verify parent of MemberGroup1
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/MemberGroup1/userGroups
+      status: 200
+      response_json_paths:
+          $.`sorted`:
+              - ParentGroup
+
+    - name: verify parent of MemberGroup2
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/MemberGroup2/userGroups
+      status: 200
+      response_json_paths:
+          $.`sorted`:
+              - ParentGroup
+
+    - name: verify parent of MemberGroup3
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/MemberGroup3/userGroups
+      status: 200
+      response_json_paths:
+          $.`sorted`:
+              - ParentGroup
+
+    - name: verify parent of MemberGroup4
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/MemberGroup4/userGroups
+      status: 200
+      response_json_paths:
+          $.`sorted`:
+              - ParentGroup
+
+    #
+    # Revoke half of memberships through opposite direction
+    #
+
+    - name: remove MemberGroup3 of ParentGroup
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/ParentGroup/memberUserGroups
+      status: 204
+      data: >
+          [
+              {
+                  "op": "remove",
+                  "path": "/",
+                  "value": "MemberGroup3"
+              }
+          ]
+
+    - name: remove ParentGroup of MemberGroup1
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/MemberGroup1/userGroups
+      status: 204
+      data: >
+          [
+              {
+                  "op": "remove",
+                  "path": "/",
+                  "value": "ParentGroup"
+              }
+          ]
+
+    #
+    # Verify memberships revoked
+    #
+    #
+    - name: verify reduced members of ParentGroup
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/ParentGroup/memberUserGroups
+      status: 200
+      response_json_paths:
+          $.`sorted`:
+              - MemberGroup2
+              - MemberGroup4
+
+    - name: verify MemberGroup1 has no parent
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/MemberGroup1/userGroups
+      status: 200
+      response_json_paths:
+          $.`len`: 0
+
+    - name: verify MemberGroup2 still has a parent
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/MemberGroup2/userGroups
+      status: 200
+      response_json_paths:
+          $.`sorted`:
+              - ParentGroup
+
+    - name: verify MemberGroup3 has no parent
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/MemberGroup3/userGroups
+      status: 200
+      response_json_paths:
+          $.`len`: 0
+
+    - name: verify MemberGroup4 still has a parent
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/MemberGroup4/userGroups
+      status: 200
+      response_json_paths:
+          $.`sorted`:
+              - ParentGroup
+
+    #
+    # Clean up
+    #
+
+    - name: delete MemberGroup1
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/MemberGroup1
+      status: 204
+
+    - name: delete MemberGroup2
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/MemberGroup2
+      status: 204
+
+    - name: delete MemberGroup3
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/MemberGroup3
+      status: 204
+
+    - name: delete MemberGroup4
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/MemberGroup4
+      status: 204
+
+    - name: delete ParentGroup
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/ParentGroup
+      status: 204
+
