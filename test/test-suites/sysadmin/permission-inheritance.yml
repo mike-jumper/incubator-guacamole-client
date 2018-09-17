@@ -1,0 +1,411 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+defaults:
+    query_parameters:
+        token: $ENVIRON['TOKEN']
+    request_headers:
+        content-type: application/json
+
+tests:
+
+    #
+    # Create user which will receive permissions via group inheritance,
+    # as well as several groups
+    #
+
+    - name: create AffectedUser
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/users
+      status: 200
+      data: >
+          {
+              "username" : "AffectedUser",
+              "password" : "secret",
+              "attributes" : {}
+          }
+
+    - name: remove default READ permission from AffectedUser
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser/permissions
+      status: 204
+      data: >
+          [
+              {
+                  "op": "remove",
+                  "path": "/userPermissions/AffectedUser",
+                  "value": "READ"
+              }
+          ]
+
+    - name: create TestGroupA
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/userGroups
+      status: 200
+      data: >
+          {
+              "identifier" : "TestGroupA",
+              "attributes" : {}
+          }
+
+    - name: create TestGroupB
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/userGroups
+      status: 200
+      data: >
+          {
+              "identifier" : "TestGroupB",
+              "attributes" : {}
+          }
+
+    - name: create TestGroupC
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/userGroups
+      status: 200
+      data: >
+          {
+              "identifier" : "TestGroupC",
+              "attributes" : {}
+          }
+
+    #
+    # Get root connection group
+    #
+
+    - name: get root group
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/connectionGroups/ROOT
+      status: 200
+
+    #
+    # Create a connection, connection groups, and sharing profile target
+    # for permissions
+    #
+
+    - name: create connection group
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/connectionGroups
+      status: 200
+      data: >
+          {
+              "parentIdentifier" : "$HISTORY['get root group'].$RESPONSE['$.identifier']",
+              "name" : "Connection Group",
+              "type" : "ORGANIZATIONAL",
+              "attributes" : {}
+          }
+
+    - name: create connection
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/connections
+      status: 200
+      data: >
+          {
+              "parentIdentifier" : "$HISTORY['create connection group'].$RESPONSE['$.identifier']",
+              "name" : "Connection",
+              "protocol" : "vnc",
+              "attributes" : {},
+              "parameters" : {}
+          }
+
+    - name: create sharing profile
+      POST: /api/session/data/$ENVIRON['DATASOURCE']/sharingProfiles
+      status: 200
+      data: >
+          {
+              "primaryConnectionIdentifier" : "$HISTORY['create connection'].$RESPONSE['$.identifier']",
+              "name" : "Sharing Profile",
+              "attributes" : {},
+              "parameters" : {}
+          }
+
+    #
+    # Arrange groups in a chain of cycles, giving AffectedUser explicit
+    # membership in only one group
+    #
+
+    - name: set member groups of TestGroupA
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/TestGroupA/memberUserGroups
+      status: 204
+      data: >
+          [
+              {
+                  "op": "add",
+                  "path": "/",
+                  "value": "TestGroupB"
+              }
+          ]
+
+    - name: set member groups of TestGroupB
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/TestGroupB/memberUserGroups
+      status: 204
+      data: >
+          [
+              {
+                  "op": "add",
+                  "path": "/",
+                  "value": "TestGroupA"
+              },
+              {
+                  "op": "add",
+                  "path": "/",
+                  "value": "TestGroupC"
+              }
+          ]
+
+    - name: set member groups of TestGroupC
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/TestGroupC/memberUserGroups
+      status: 204
+      data: >
+          [
+              {
+                  "op": "add",
+                  "path": "/",
+                  "value": "TestGroupB"
+              }
+          ]
+
+    - name: add AffectedUser to TestGroupA
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/TestGroupA/memberUsers
+      status: 204
+      data: >
+          [
+              {
+                  "op": "add",
+                  "path": "/",
+                  "value": "AffectedUser"
+              }
+          ]
+
+    #
+    # Log in as AffectedUser
+    #
+
+    - name: log in as AffectedUser
+      POST: /api/tokens
+      query_parameters: {}
+      request_headers:
+          content-type: application/x-www-form-urlencoded
+      status: 200
+      data: username=AffectedUser&password=secret
+      response_json_paths:
+          $.username: AffectedUser
+          $.dataSource: $ENVIRON['DATASOURCE']
+
+    #
+    # Grant permissions via group
+    #
+
+    - name: grant permissions to TestGroupC
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/TestGroupC/permissions
+      status: 204
+      data: >
+          [
+              {
+                  "op": "add",
+                  "path": "/systemPermissions",
+                  "value": "CREATE_USER"
+              },
+              {
+                  "op": "add",
+                  "path": "/systemPermissions",
+                  "value": "CREATE_USER_GROUP"
+              },
+              {
+                  "op": "add",
+                  "path": "/systemPermissions",
+                  "value": "CREATE_CONNECTION"
+              },
+              {
+                  "op": "add",
+                  "path": "/systemPermissions",
+                  "value": "CREATE_CONNECTION_GROUP"
+              },
+              {
+                  "op": "add",
+                  "path": "/systemPermissions",
+                  "value": "CREATE_SHARING_PROFILE"
+              },
+              {
+                  "op": "add",
+                  "path": "/userPermissions/AffectedUser",
+                  "value": "READ"
+              },
+              {
+                  "op": "add",
+                  "path": "/userPermissions/AffectedUser",
+                  "value": "UPDATE"
+              },
+              {
+                  "op": "add",
+                  "path": "/userGroupPermissions/TestGroupB",
+                  "value": "READ"
+              },
+              {
+                  "op": "add",
+                  "path": "/userGroupPermissions/TestGroupB",
+                  "value": "UPDATE"
+              },
+              {
+                  "op": "add",
+                  "path": "/connectionPermissions/$HISTORY['create connection'].$RESPONSE['$.identifier']",
+                  "value": "READ"
+              },
+              {
+                  "op": "add",
+                  "path": "/connectionPermissions/$HISTORY['create connection'].$RESPONSE['$.identifier']",
+                  "value": "UPDATE"
+              },
+              {
+                  "op": "add",
+                  "path": "/connectionGroupPermissions/$HISTORY['create connection group'].$RESPONSE['$.identifier']",
+                  "value": "READ"
+              },
+              {
+                  "op": "add",
+                  "path": "/connectionGroupPermissions/$HISTORY['create connection group'].$RESPONSE['$.identifier']",
+                  "value": "UPDATE"
+              },
+              {
+                  "op": "add",
+                  "path": "/sharingProfilePermissions/$HISTORY['create sharing profile'].$RESPONSE['$.identifier']",
+                  "value": "READ"
+              },
+              {
+                  "op": "add",
+                  "path": "/sharingProfilePermissions/$HISTORY['create sharing profile'].$RESPONSE['$.identifier']",
+                  "value": "UPDATE"
+              }
+          ]
+
+    - name: verify permissions inherited
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/self/effectivePermissions
+      query_parameters:
+        token: $HISTORY['log in as AffectedUser'].$RESPONSE['$.authToken']
+      status: 200
+      response_json_paths:
+          $.connectionGroupPermissions["$HISTORY['create connection group'].$RESPONSE['$.identifier']"].`sorted`:
+              - READ
+              - UPDATE 
+          $.connectionPermissions["$HISTORY['create connection'].$RESPONSE['$.identifier']"].`sorted`:
+              - READ
+              - UPDATE 
+          $.sharingProfilePermissions["$HISTORY['create sharing profile'].$RESPONSE['$.identifier']"].`sorted`:
+              - READ
+              - UPDATE 
+          $.userPermissions.AffectedUser.`sorted`:
+              - READ
+              - UPDATE 
+          $.userGroupPermissions.TestGroupB.`sorted`:
+              - READ
+              - UPDATE 
+          $.systemPermissions.`sorted`:
+              - CREATE_CONNECTION
+              - CREATE_CONNECTION_GROUP
+              - CREATE_SHARING_PROFILE
+              - CREATE_USER
+              - CREATE_USER_GROUP
+
+    #
+    # Revoke system permissions
+    #
+
+    - name: revoke permissions from TestGroupC
+      PATCH: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/TestGroupC/permissions
+      status: 204
+      data: >
+          [
+              {
+                  "op": "remove",
+                  "path": "/systemPermissions",
+                  "value": "CREATE_USER_GROUP"
+              },
+              {
+                  "op": "remove",
+                  "path": "/systemPermissions",
+                  "value": "CREATE_CONNECTION"
+              },
+              {
+                  "op": "remove",
+                  "path": "/userPermissions/AffectedUser",
+                  "value": "READ"
+              },
+              {
+                  "op": "remove",
+                  "path": "/userGroupPermissions/TestGroupB",
+                  "value": "READ"
+              },
+              {
+                  "op": "remove",
+                  "path": "/connectionPermissions/$HISTORY['create connection'].$RESPONSE['$.identifier']",
+                  "value": "UPDATE"
+              },
+              {
+                  "op": "remove",
+                  "path": "/connectionGroupPermissions/$HISTORY['create connection group'].$RESPONSE['$.identifier']",
+                  "value": "READ"
+              },
+              {
+                  "op": "remove",
+                  "path": "/sharingProfilePermissions/$HISTORY['create sharing profile'].$RESPONSE['$.identifier']",
+                  "value": "UPDATE"
+              }
+          ]
+
+    - name: verify inherited permissions revoked
+      GET: /api/session/data/$ENVIRON['DATASOURCE']/self/effectivePermissions
+      query_parameters:
+        token: $HISTORY['log in as AffectedUser'].$RESPONSE['$.authToken']
+      status: 200
+      response_json_paths:
+          $.connectionGroupPermissions["$HISTORY['create connection group'].$RESPONSE['$.identifier']"].`sorted`:
+              - UPDATE 
+          $.connectionPermissions["$HISTORY['create connection'].$RESPONSE['$.identifier']"].`sorted`:
+              - READ
+          $.sharingProfilePermissions["$HISTORY['create sharing profile'].$RESPONSE['$.identifier']"].`sorted`:
+              - READ
+          $.userPermissions.AffectedUser.`sorted`:
+              - UPDATE 
+          $.userGroupPermissions.TestGroupB.`sorted`:
+              - UPDATE
+          $.systemPermissions.`sorted`:
+              - CREATE_CONNECTION_GROUP
+              - CREATE_SHARING_PROFILE
+              - CREATE_USER
+
+    #
+    # Clean up
+    #
+
+    - name: delete AffectedUser
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/users/AffectedUser
+      status: 204
+
+    - name: delete TestGroupA
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/TestGroupA
+      status: 204
+
+    - name: delete TestGroupB
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/TestGroupB
+      status: 204
+
+    - name: delete TestGroupC
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/userGroups/TestGroupC
+      status: 204
+
+    - name: delete connection group
+      DELETE: /api/session/data/$ENVIRON['DATASOURCE']/connectionGroups/$HISTORY['create connection group'].$RESPONSE['$.identifier']
+      status: 204
+
+    - name: log out as AffectedUser
+      DELETE: /api/tokens/$HISTORY['log in as AffectedUser'].$RESPONSE['$.authToken']
+      query_parameters: {}
+      status: 204
+
