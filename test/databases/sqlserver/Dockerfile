@@ -18,15 +18,16 @@
 #
 
 #
-# Dockerfile for a pre-initialized PostgreSQL database for Apache Guacamole
+# Dockerfile for a pre-initialized SQL Server database for Apache Guacamole
 #
 
-FROM postgres:9.4
+ARG SQLSERVER_VERSION=2017-latest
+FROM microsoft/mssql-server-linux:${SQLSERVER_VERSION}
 
 # Add schema scripts
-COPY schema/ /opt/guacamole/schema
+COPY extensions/guacamole-auth-jdbc/modules/guacamole-auth-jdbc-sqlserver/schema/ /opt/guacamole/schema
+COPY test/databases/sqlserver/bin/initdb.sh /opt/guacamole/initdb.sh
+COPY test/databases/sqlserver/bin/entrypoint.sh /opt/guacamole/entrypoint.sh
 
-# Copy database initialization script to location where PostgreSQL will run
-# it automatically
-COPY docker/initdb.sh /docker-entrypoint-initdb.d/initdb.sh
+CMD [ "/opt/guacamole/entrypoint.sh" ]
 

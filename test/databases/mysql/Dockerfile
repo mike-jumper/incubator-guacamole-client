@@ -18,15 +18,16 @@
 #
 
 #
-# Dockerfile for a pre-initialized SQL Server database for Apache Guacamole
+# Dockerfile for a pre-initialized MySQL database for Apache Guacamole
 #
 
-FROM microsoft/mssql-server-linux:2017-latest
+ARG MYSQL_VERSION=5.7
+FROM mysql:${MYSQL_VERSION}
 
 # Add schema scripts
-COPY schema/ /opt/guacamole/schema
-COPY docker/initdb.sh /opt/guacamole/initdb.sh
-COPY docker/entrypoint.sh /opt/guacamole/entrypoint.sh
+COPY extensions/guacamole-auth-jdbc/modules/guacamole-auth-jdbc-mysql/schema/ /opt/guacamole/schema
 
-CMD [ "/opt/guacamole/entrypoint.sh" ]
+# Copy database initialization script to location where MySQL will run it
+# automatically
+COPY test/databases/mysql/bin/initdb.sh /docker-entrypoint-initdb.d/initdb.sh
 

@@ -18,15 +18,16 @@
 #
 
 #
-# Dockerfile for a pre-initialized PostgreSQL database for Apache Guacamole
+# Dockerfile for a pre-initialized MariaDB database for Apache Guacamole
 #
 
-FROM mysql:5.7
+ARG MARIADB_VERSION=10.3
+FROM mariadb:${MARIADB_VERSION}
 
 # Add schema scripts
-COPY schema/ /opt/guacamole/schema
+COPY extensions/guacamole-auth-jdbc/modules/guacamole-auth-jdbc-mysql/schema/ /opt/guacamole/schema
 
-# Copy database initialization script to location where MySQL will run it
+# Copy database initialization script to location where MariaDB will run it
 # automatically
-COPY docker/initdb.sh /docker-entrypoint-initdb.d/initdb.sh
+COPY test/databases/mariadb/bin/initdb.sh /docker-entrypoint-initdb.d/initdb.sh
 

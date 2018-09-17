@@ -32,8 +32,9 @@
 ## specify the "-d DATABASE" option, where DATABASE is any one of the following
 ## values:
 ##
+##     "mariadb"
 ##     "mysql"
-##     "postgres"
+##     "postgresql"
 ##     "sqlserver"
 ##
 ## After the test script has finished, a copy of the Guacamole web application
@@ -60,14 +61,9 @@ SUFFIX="guac-test-$$"
 
 ##
 ## The type of database to test against. By default, PostgreSQL will be used,
-## but this can be overridden with the "-d DATABASE" option, where DATABASE
-## is one of:
+## but this can be overridden with the "-d DATABASE" option (see above).
 ##
-##     "mysql"
-##     "postgres"
-##     "sqlserver"
-##
-DATABASE="postgres"
+DATABASE="postgresql"
 
 ##
 ## Prints the given error message, advises the user of correct usage of this
@@ -81,7 +77,7 @@ invalid_usage() {
     cat <<END
 $MESSAGE
 
-USAGE: clean-run.sh [-C] [-d postgres | mysql | sqlserver]
+USAGE: clean-run.sh [-C] [-d postgresql | mariadb | mysql | sqlserver]
 END
     exit 1
 }
@@ -99,7 +95,7 @@ while getopts ":Cd:" OPT; do
             SUFFIX="guac-test"
             ;;
 
-        # Allow default database (postgres) to be overridden
+        # Allow default database (PostgreSQL) to be overridden
         d)
             DATABASE="$OPTARG"
             ;;
@@ -208,21 +204,27 @@ trap "cleanup" EXIT
 
 case "$DATABASE" in
 
-    postgres)
+    postgresql)
         DATABASE_VAR_PREFIX="POSTGRES"
-        DATABASE_MODULE="guacamole-auth-jdbc-postgresql"
+        DATABASE_MODULE="postgresql"
         DATABASE_OPTS=""
+        ;;
+
+    mariadb)
+        DATABASE_VAR_PREFIX="MYSQL"
+        DATABASE_MODULE="mariadb"
+        DATABASE_OPTS="-e MYSQL_ROOT_PASSWORD=secret"
         ;;
 
     mysql)
         DATABASE_VAR_PREFIX="MYSQL"
-        DATABASE_MODULE="guacamole-auth-jdbc-mysql"
+        DATABASE_MODULE="mysql"
         DATABASE_OPTS="-e MYSQL_ROOT_PASSWORD=secret"
         ;;
 
     sqlserver)
         DATABASE_VAR_PREFIX="SQLSERVER"
-        DATABASE_MODULE="guacamole-auth-jdbc-sqlserver"
+        DATABASE_MODULE="sqlserver"
         DATABASE_OPTS="-e SA_PASSWORD=SecretPassword123 -e ACCEPT_EULA=Y"
         ;;
 
@@ -247,9 +249,9 @@ fi
 cd "$BASE_DIR/"
 docker build $CACHE_OPTS --tag "$GUAC_TAG" .
 
-# Build PostgreSQL database image
-cd "$BASE_DIR/extensions/guacamole-auth-jdbc/modules/$DATABASE_MODULE/"
-docker build $CACHE_OPTS --tag "$DATABASE_TAG" .
+# Build database image
+docker build $CACHE_OPTS --tag "$DATABASE_TAG" \
+    -f "test/databases/$DATABASE_MODULE/Dockerfile" .
 
 # Build test runner image
 cd "$BASE_DIR/test/"
