@@ -26,16 +26,31 @@
 ## database, also within Docker. The various Docker resources involved
 ## are only used temporarily and are cleaned up upon completion.
 ##
-## By default, tests will be performed against a PostgreSQL database, and the
-## Docker image cache is not used. To make use of the Docker image cache to
+## By default, tests will be performed against a PostgreSQL 10.5 database, and
+## the  Docker image cache is not used. To make use of the Docker image cache to
 ## speed up future test runs, use the "-C" option. To use a different database,
 ## specify the "-d DATABASE" option, where DATABASE is any one of the following
 ## values:
 ##
-##     "mariadb"
-##     "mysql"
-##     "postgresql"
-##     "sqlserver"
+##     "mariadb-5.5"
+##     "mariadb-10.0"
+##     "mariadb-10.1"
+##     "mariadb-10.2"
+##     "mariadb-10.3"
+##     "mysql-5.5"
+##     "mysql-5.6"
+##     "mysql-5.7"
+##     "mysql-8.0"
+##     "postgresql-9.3"
+##     "postgresql-9.4"
+##     "postgresql-9.5"
+##     "postgresql-9.6"
+##     "postgresql-10.5"
+##     "sqlserver-2008"
+##     "sqlserver-2012"
+##     "sqlserver-2014"
+##     "sqlserver-2016"
+##     "sqlserver-2017"
 ##
 ## After the test script has finished, a copy of the Guacamole web application
 ## logs and database logs can be found at:
@@ -60,10 +75,10 @@ USE_CACHE=0
 SUFFIX="guac-test-$$"
 
 ##
-## The type of database to test against. By default, PostgreSQL will be used,
-## but this can be overridden with the "-d DATABASE" option (see above).
+## The type of database to test against. By default, PostgreSQL 10.5 will be
+## used, but this can be overridden with the "-d DATABASE" option (see above).
 ##
-DATABASE="postgresql"
+DATABASE="postgresql-10.5"
 
 ##
 ## Prints the given error message, advises the user of correct usage of this
@@ -77,7 +92,30 @@ invalid_usage() {
     cat <<END
 $MESSAGE
 
-USAGE: clean-run.sh [-C] [-d postgresql | mariadb | mysql | sqlserver]
+USAGE: clean-run.sh [-C] [-d DATABASE]
+
+Where DATABASE is any one of:
+
+    mariadb-5.5
+    mariadb-10.0
+    mariadb-10.1
+    mariadb-10.2
+    mariadb-10.3
+    mysql-5.5
+    mysql-5.6
+    mysql-5.7
+    mysql-8.0
+    postgresql-9.3
+    postgresql-9.4
+    postgresql-9.5
+    postgresql-9.6
+    postgresql-10.5
+    sqlserver-2008
+    sqlserver-2012
+    sqlserver-2014
+    sqlserver-2016
+    sqlserver-2017
+
 END
     exit 1
 }
@@ -204,28 +242,154 @@ trap "cleanup" EXIT
 
 case "$DATABASE" in
 
-    postgresql)
+    #
+    # PostgreSQL
+    #
+
+
+    postgresql-10.5)
         DATABASE_VAR_PREFIX="POSTGRES"
         DATABASE_MODULE="postgresql"
         DATABASE_OPTS=""
+        DATABASE_BUILD_OPTS="--build-arg=POSTGRES_VERSION=10.5"
         ;;
 
-    mariadb)
-        DATABASE_VAR_PREFIX="MYSQL"
-        DATABASE_MODULE="mariadb"
-        DATABASE_OPTS="-e MYSQL_ROOT_PASSWORD=secret"
+    postgresql-9.6)
+        DATABASE_VAR_PREFIX="POSTGRES"
+        DATABASE_MODULE="postgresql"
+        DATABASE_OPTS=""
+        DATABASE_BUILD_OPTS="--build-arg=POSTGRES_VERSION=9.6"
         ;;
 
-    mysql)
+    postgresql-9.5)
+        DATABASE_VAR_PREFIX="POSTGRES"
+        DATABASE_MODULE="postgresql"
+        DATABASE_OPTS=""
+        DATABASE_BUILD_OPTS="--build-arg=POSTGRES_VERSION=9.5"
+        ;;
+
+    postgresql-9.4)
+        DATABASE_VAR_PREFIX="POSTGRES"
+        DATABASE_MODULE="postgresql"
+        DATABASE_OPTS=""
+        DATABASE_BUILD_OPTS="--build-arg=POSTGRES_VERSION=9.4"
+        ;;
+
+    postgresql-9.3)
+        DATABASE_VAR_PREFIX="POSTGRES"
+        DATABASE_MODULE="postgresql"
+        DATABASE_OPTS=""
+        DATABASE_BUILD_OPTS="--build-arg=POSTGRES_VERSION=9.3"
+        ;;
+
+    #
+    # MySQL
+    #
+
+    mysql-8.0)
         DATABASE_VAR_PREFIX="MYSQL"
         DATABASE_MODULE="mysql"
         DATABASE_OPTS="-e MYSQL_ROOT_PASSWORD=secret"
+        DATABASE_BUILD_OPTS="--build-arg=MYSQL_VERSION=8.0"
         ;;
 
-    sqlserver)
+    mysql-5.7)
+        DATABASE_VAR_PREFIX="MYSQL"
+        DATABASE_MODULE="mysql"
+        DATABASE_OPTS="-e MYSQL_ROOT_PASSWORD=secret"
+        DATABASE_BUILD_OPTS="--build-arg=MYSQL_VERSION=5.7"
+        ;;
+
+    mysql-5.6)
+        DATABASE_VAR_PREFIX="MYSQL"
+        DATABASE_MODULE="mysql"
+        DATABASE_OPTS="-e MYSQL_ROOT_PASSWORD=secret"
+        DATABASE_BUILD_OPTS="--build-arg=MYSQL_VERSION=5.6"
+        ;;
+
+    mysql-5.5)
+        DATABASE_VAR_PREFIX="MYSQL"
+        DATABASE_MODULE="mysql"
+        DATABASE_OPTS="-e MYSQL_ROOT_PASSWORD=secret"
+        DATABASE_BUILD_OPTS="--build-arg=MYSQL_VERSION=5.5"
+        ;;
+
+    #
+    # MariaDB
+    #
+
+    mariadb-10.3)
+        DATABASE_VAR_PREFIX="MYSQL"
+        DATABASE_MODULE="mariadb"
+        DATABASE_OPTS="-e MYSQL_ROOT_PASSWORD=secret"
+        DATABASE_BUILD_OPTS="--build-arg=MARIADB_VERSION=10.3"
+        ;;
+
+    mariadb-10.2)
+        DATABASE_VAR_PREFIX="MYSQL"
+        DATABASE_MODULE="mariadb"
+        DATABASE_OPTS="-e MYSQL_ROOT_PASSWORD=secret"
+        DATABASE_BUILD_OPTS="--build-arg=MARIADB_VERSION=10.2"
+        ;;
+
+    mariadb-10.1)
+        DATABASE_VAR_PREFIX="MYSQL"
+        DATABASE_MODULE="mariadb"
+        DATABASE_OPTS="-e MYSQL_ROOT_PASSWORD=secret"
+        DATABASE_BUILD_OPTS="--build-arg=MARIADB_VERSION=10.1"
+        ;;
+
+    mariadb-10.0)
+        DATABASE_VAR_PREFIX="MYSQL"
+        DATABASE_MODULE="mariadb"
+        DATABASE_OPTS="-e MYSQL_ROOT_PASSWORD=secret"
+        DATABASE_BUILD_OPTS="--build-arg=MARIADB_VERSION=10.0"
+        ;;
+
+    mariadb-5.5)
+        DATABASE_VAR_PREFIX="MYSQL"
+        DATABASE_MODULE="mariadb"
+        DATABASE_OPTS="-e MYSQL_ROOT_PASSWORD=secret"
+        DATABASE_BUILD_OPTS="--build-arg=MARIADB_VERSION=5.5"
+        ;;
+
+    #
+    # SQL Server
+    #
+
+    sqlserver-2017)
         DATABASE_VAR_PREFIX="SQLSERVER"
         DATABASE_MODULE="sqlserver"
-        DATABASE_OPTS="-e SA_PASSWORD=SecretPassword123 -e ACCEPT_EULA=Y"
+        DATABASE_OPTS="-e COMPAT_LEVEL=140 -e SA_PASSWORD=SecretPassword123 -e ACCEPT_EULA=Y"
+        DATABASE_BUILD_OPTS=""
+        ;;
+
+    sqlserver-2016)
+        DATABASE_VAR_PREFIX="SQLSERVER"
+        DATABASE_MODULE="sqlserver"
+        DATABASE_OPTS="-e COMPAT_LEVEL=130 -e SA_PASSWORD=SecretPassword123 -e ACCEPT_EULA=Y"
+        DATABASE_BUILD_OPTS=""
+        ;;
+
+    sqlserver-2014)
+        DATABASE_VAR_PREFIX="SQLSERVER"
+        DATABASE_MODULE="sqlserver"
+        DATABASE_OPTS="-e COMPAT_LEVEL=120 -e SA_PASSWORD=SecretPassword123 -e ACCEPT_EULA=Y"
+        DATABASE_BUILD_OPTS=""
+        ;;
+
+    sqlserver-2012)
+        DATABASE_VAR_PREFIX="SQLSERVER"
+        DATABASE_MODULE="sqlserver"
+        DATABASE_OPTS="-e COMPAT_LEVEL=110 -e SA_PASSWORD=SecretPassword123 -e ACCEPT_EULA=Y"
+        DATABASE_BUILD_OPTS=""
+        ;;
+
+    sqlserver-2008)
+        DATABASE_VAR_PREFIX="SQLSERVER"
+        DATABASE_MODULE="sqlserver"
+        DATABASE_OPTS="-e COMPAT_LEVEL=100 -e SA_PASSWORD=SecretPassword123 -e ACCEPT_EULA=Y"
+        DATABASE_BUILD_OPTS=""
         ;;
 
     # Bail out if database is unknown
@@ -251,6 +415,7 @@ docker build $CACHE_OPTS --tag "$GUAC_TAG" .
 
 # Build database image
 docker build $CACHE_OPTS --tag "$DATABASE_TAG" \
+    $DATABASE_BUILD_OPTS                       \
     -f "test/databases/$DATABASE_MODULE/Dockerfile" .
 
 # Build test runner image
