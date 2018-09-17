@@ -78,6 +78,7 @@ cd "$(dirname "$0")"
 # Prepare test environment
 echo_header "Preparing environment"
 ./util/run-as.py --username=guacadmin --password=guacadmin \
+    --tries=60 --interval=10                               \
     --url="$GUACAMOLE_URL" -- gabbi-run "$GUACAMOLE_URL" -- test-suites/prepare/*.yml
 
 # Run tests which require sysadmin privileges

@@ -204,12 +204,9 @@ DATABASE_CONTAINER="database-$SUFFIX"
 cleanup() {
     echo "Beginning cleanup..."
 
-    # Request that Tomcat shutdown
-    docker exec "$GUAC_CONTAINER" shutdown.sh || true
-
-    # Clean up containers
-    docker stop "$GUAC_CONTAINER" || true
-    docker stop "$DATABASE_CONTAINER" || true
+    # Forcibly kill containers
+    docker kill "$GUAC_CONTAINER" || true
+    docker kill "$DATABASE_CONTAINER" || true
 
     # Clean up network shared between containers
     docker network rm "$NETWORK" || true
