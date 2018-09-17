@@ -37,9 +37,10 @@
 ##     "sqlserver"
 ##
 ## After the test script has finished, a copy of the Guacamole web application
-## logs can be found at:
+## logs and database logs can be found at:
 ##
 ##     target/clean-run/logs/guacamole.log
+##     target/clean-run/logs/database.log
 ##
 ## Debug-level logging is enabled.
 ##
@@ -179,9 +180,14 @@ cleanup() {
     # Clean up network shared between containers
     docker network rm "$NETWORK" || true
 
-    # Save Guacamole logs and remove container
+    # Save Guacamole and database logs
     (docker logs "$GUAC_CONTAINER" &> "$LOG_DIR/guacamole.log") || true
+    (docker logs "$DATABASE_CONTAINER" &> "$LOG_DIR/database.log") || true
+
+    # Remove Guacamole and database containers (not automatically removed
+    # as we need to be able to grab the logs)
     docker rm "$GUAC_CONTAINER" || true
+    docker rm "$DATABASE_CONTAINER" || true
 
     # Clean up images if not using cache
     if [ "$USE_CACHE" -eq 0 ]; then
@@ -257,11 +263,11 @@ docker build $CACHE_OPTS --tag "$TEST_TAG" .
 docker network create "$NETWORK"
 
 # Create and initialize a fresh Guacamole database
-docker run -d --rm --net "$NETWORK" --name "$DATABASE_CONTAINER" \
-    -e GUACAMOLE_DB_NAME=guacamole_db                            \
-    -e GUACAMOLE_DB_USER=guacamole_user                          \
-    -e GUACAMOLE_DB_PASSWORD=S0me_P@s5woRD                       \
-    $DATABASE_OPTS                                               \
+docker run -d --net "$NETWORK" --name "$DATABASE_CONTAINER" \
+    -e GUACAMOLE_DB_NAME=guacamole_db                       \
+    -e GUACAMOLE_DB_USER=guacamole_user                     \
+    -e GUACAMOLE_DB_PASSWORD=S0me_P@s5woRD                  \
+    $DATABASE_OPTS                                          \
     "$DATABASE_TAG"
 
 # Start a Guacamole instance connected to that database
