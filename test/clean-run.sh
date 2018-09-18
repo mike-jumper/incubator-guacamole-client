@@ -186,15 +186,21 @@ GUAC_CONTAINER="guac-$SUFFIX"
 DATABASE_TAG="database-image-$SUFFIX"
 
 ##
+## The name to assign to the Guacamole database Docker container created by
+## this script.
+##
+DATABASE_CONTAINER="database-$SUFFIX"
+
+##
 ## The tag to assign to test runner Docker images built by this script.
 ##
 TEST_TAG="test-image-$SUFFIX"
 
 ##
-## The name to assign to the Guacamole database Docker container created by
-## this script.
+## The name to assign to the test runner Docker container created by this
+## script.
 ##
-DATABASE_CONTAINER="database-$SUFFIX"
+TEST_CONTAINER="test-runner-$SUFFIX"
 
 ##
 ## Performs cleanup after the test has completed. All Docker containers and
@@ -207,6 +213,7 @@ cleanup() {
     # Forcibly kill containers
     docker kill "$GUAC_CONTAINER" || true
     docker kill "$DATABASE_CONTAINER" || true
+    docker kill "$TEST_CONTAINER" || true
 
     # Clean up network shared between containers
     docker network rm "$NETWORK" || true
@@ -214,11 +221,13 @@ cleanup() {
     # Save Guacamole and database logs
     (docker logs "$GUAC_CONTAINER" &> "$LOG_DIR/guacamole.log") || true
     (docker logs "$DATABASE_CONTAINER" &> "$LOG_DIR/database.log") || true
+    (docker logs "$TEST_CONTAINER" &> "$LOG_DIR/test.log") || true
 
-    # Remove Guacamole and database containers (not automatically removed
-    # as we need to be able to grab the logs)
+    # Remove containers (not automatically removed as we need to be able to
+    # grab the logs)
     docker rm "$GUAC_CONTAINER" || true
     docker rm "$DATABASE_CONTAINER" || true
+    docker rm "$TEST_CONTAINER" || true
 
     # Clean up images if not using cache
     if [ "$USE_CACHE" -eq 0 ]; then
@@ -242,7 +251,6 @@ case "$DATABASE" in
     #
     # PostgreSQL
     #
-
 
     postgresql-10.5)
         DATABASE_VAR_PREFIX="POSTGRES"
@@ -447,7 +455,7 @@ docker run -d --net "$NETWORK" --name "$GUAC_CONTAINER"               \
     "$GUAC_TAG"
 
 # Execute tests against the Guacamole instance just created
-docker run -t --rm --net "$NETWORK"                                   \
+docker run -t --net "$NETWORK" --name "$TEST_CONTAINER"               \
     -e GUACAMOLE_URL="http://$GUAC_CONTAINER.$NETWORK:8080/guacamole" \
     "$TEST_TAG"
 
