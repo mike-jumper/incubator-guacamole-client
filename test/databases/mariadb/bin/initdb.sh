@@ -38,8 +38,10 @@ EOF
 # Initialize database using schema scripts
 #
 
-cat /opt/guacamole/schema/*.sql | \
-    mysql -u root -p"$MYSQL_ROOT_PASSWORD" "$GUACAMOLE_DB_NAME"
+for SCRIPT in /opt/guacamole/schema/*.sql; do
+    echo "Running $SCRIPT ..."
+    mysql -u root -p"$MYSQL_ROOT_PASSWORD" "$GUACAMOLE_DB_NAME" < "$SCRIPT"
+done
 
 #
 # Create Guacamole-specific database user with only necessary permissions

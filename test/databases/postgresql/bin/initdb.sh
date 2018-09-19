@@ -38,8 +38,11 @@ EOF
 # Initialize database using schema scripts
 #
 
-cat /opt/guacamole/schema/*.sql | \
-    psql -d "$GUACAMOLE_DB_NAME" -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -f -
+for SCRIPT in /opt/guacamole/schema/*.sql; do
+    echo "Running $SCRIPT ..."
+    psql -d "$GUACAMOLE_DB_NAME" -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" \
+        -f "$SCRIPT"
+done
 
 #
 # Create Guacamole-specific database user with only necessary permissions

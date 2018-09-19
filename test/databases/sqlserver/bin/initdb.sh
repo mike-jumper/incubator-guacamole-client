@@ -61,6 +61,7 @@ END
 #
 
 for SCRIPT in /opt/guacamole/schema/*.sql; do
+    echo "Running $SCRIPT ..."
     /opt/mssql-tools/bin/sqlcmd              \
         -S localhost -U sa -P "$SA_PASSWORD" \
         -d "$GUACAMOLE_DB_NAME" -b -i "$SCRIPT"
