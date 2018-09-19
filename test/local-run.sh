@@ -73,7 +73,7 @@ trap 'echo_header "FAILED :("' ERR
 cd "$(dirname "$0")"
 
 # Wait for Apache Guacamole to become ready
-./util/wait-for-guac.py "$GUACAMOLE_URL"
+./util/wait-for-guac.py --tries=20 "$GUACAMOLE_URL"
 
 # Prepare test environment
 echo_header "Preparing environment"
