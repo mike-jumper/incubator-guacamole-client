@@ -490,6 +490,7 @@
         "FIELD_HEADER_ENABLE_SFTP"   : "Enable SFTP:",
         "FIELD_HEADER_HOST_KEY"      : "Public host key (Base64):",
         "FIELD_HEADER_HOSTNAME"      : "Hostname:",
+        "FIELD_HEADER_LOCALE"        : "POSIX locale:",
         "FIELD_HEADER_USERNAME"      : "Username:",
         "FIELD_HEADER_PASSWORD"      : "Password:",
         "FIELD_HEADER_PASSPHRASE"    : "Passphrase:",
