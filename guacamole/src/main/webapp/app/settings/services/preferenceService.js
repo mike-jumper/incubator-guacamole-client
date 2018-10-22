@@ -87,16 +87,7 @@ angular.module('settings').provider('preferenceService', ['$injector',
      *     The key of the language currently in use within the browser.
      */
     var getDefaultLanguageKey = function getDefaultLanguageKey() {
-
-        // Pull browser language, falling back to US English
-        var language = (navigator.languages && navigator.languages[0])
-                     || navigator.language
-                     || navigator.browserLanguage
-                     || 'en';
-
-        // Convert to format used internally
-        return language.replace(/-/g, '_');
-
+        return Guacamole.Language.getCurrent('en').toPOSIX();
     };
 
     /**
