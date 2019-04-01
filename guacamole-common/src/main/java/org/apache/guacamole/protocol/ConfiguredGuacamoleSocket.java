@@ -26,6 +26,8 @@ import org.apache.guacamole.GuacamoleServerException;
 import org.apache.guacamole.io.GuacamoleReader;
 import org.apache.guacamole.io.GuacamoleWriter;
 import org.apache.guacamole.net.GuacamoleSocket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A GuacamoleSocket which pre-configures the connection based on a given
@@ -38,6 +40,11 @@ import org.apache.guacamole.net.GuacamoleSocket;
  * handshake.
  */
 public class ConfiguredGuacamoleSocket implements GuacamoleSocket {
+
+    /**
+     * Logger for this class.
+     */
+    private Logger logger = LoggerFactory.getLogger(ConfiguredGuacamoleSocket.class);
 
     /**
      * The wrapped socket.
@@ -131,9 +138,11 @@ public class ConfiguredGuacamoleSocket implements GuacamoleSocket {
 
         // Send requested protocol or connection ID
         writer.writeInstruction(new GuacamoleInstruction("select", select_arg));
+        logger.info("Handshake: sent \"select\"");
 
         // Wait for server args
         GuacamoleInstruction args = expect(reader, "args");
+        logger.info("Handshake: received \"args\"");
 
         // Build args list off provided names and config
         List<String> arg_names = args.getArgs();
@@ -163,6 +172,7 @@ public class ConfiguredGuacamoleSocket implements GuacamoleSocket {
                 Integer.toString(info.getOptimalResolution())
             )
         );
+        logger.info("Handshake: sent \"size\"");
 
         // Send supported audio formats
         writer.writeInstruction(
@@ -170,6 +180,7 @@ public class ConfiguredGuacamoleSocket implements GuacamoleSocket {
                     "audio",
                     info.getAudioMimetypes().toArray(new String[0])
                 ));
+        logger.info("Handshake: sent \"audio\"");
 
         // Send supported video formats
         writer.writeInstruction(
@@ -177,6 +188,7 @@ public class ConfiguredGuacamoleSocket implements GuacamoleSocket {
                     "video",
                     info.getVideoMimetypes().toArray(new String[0])
                 ));
+        logger.info("Handshake: sent \"video\"");
 
         // Send supported image formats
         writer.writeInstruction(
@@ -184,18 +196,23 @@ public class ConfiguredGuacamoleSocket implements GuacamoleSocket {
                     "image",
                     info.getImageMimetypes().toArray(new String[0])
                 ));
+        logger.info("Handshake: sent \"image\"");
 
         // Send args
         writer.writeInstruction(new GuacamoleInstruction("connect", arg_values));
+        logger.info("Handshake: sent \"connect\"");
 
         // Wait for ready, store ID
         GuacamoleInstruction ready = expect(reader, "ready");
+        logger.info("Handshake: received \"ready\"");
 
         List<String> ready_args = ready.getArgs();
         if (ready_args.isEmpty())
             throw new GuacamoleServerException("No connection ID received");
 
         id = ready.getArgs().get(0);
+
+        logger.info("Handshake complete. Normal connection phase begins...");
 
     }
 

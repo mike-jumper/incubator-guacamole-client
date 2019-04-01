@@ -1478,6 +1478,8 @@ Guacamole.Client = function(tunnel) {
 
     tunnel.oninstruction = function(opcode, parameters) {
 
+        console.log(new Date(), opcode, parameters);
+
         var handler = instructionHandlers[opcode];
         if (handler)
             handler(parameters);

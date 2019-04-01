@@ -87,7 +87,7 @@ public class InetGuacamoleSocket implements GuacamoleSocket {
 
         try {
 
-            logger.debug("Connecting to guacd at {}:{}.", hostname, port);
+            logger.info("Connecting to guacd at {}:{} ...", hostname, port);
 
             // Get address
             SocketAddress address = new InetSocketAddress(
@@ -98,6 +98,8 @@ public class InetGuacamoleSocket implements GuacamoleSocket {
             // Connect with timeout
             sock = new Socket();
             sock.connect(address, SOCKET_TIMEOUT);
+
+            logger.info("Connected to guacd at {}:{}.", hostname, port);
 
             // Set read timeout
             sock.setSoTimeout(SOCKET_TIMEOUT);

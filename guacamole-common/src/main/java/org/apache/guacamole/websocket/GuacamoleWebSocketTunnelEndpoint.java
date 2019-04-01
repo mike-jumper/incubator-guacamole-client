@@ -159,11 +159,14 @@ public abstract class GuacamoleWebSocketTunnelEndpoint extends Endpoint {
                         // Attempt to read
                         while ((readMessage = reader.read()) != null) {
 
+                            logger.info("Received {} characters from guacd: \"{}\"", readMessage.length, new String(readMessage));
+
                             // Buffer message
                             buffer.append(readMessage);
 
                             // Flush if we expect to wait or buffer is getting full
                             if (!reader.available() || buffer.length() >= BUFFER_SIZE) {
+                                logger.info("Flushing {} characters to WebSocket: \"{}\"", buffer.length(), buffer.toString());
                                 remote.sendText(buffer.toString());
                                 buffer.setLength(0);
                             }
