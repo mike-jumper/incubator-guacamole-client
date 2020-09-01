@@ -210,6 +210,7 @@
                     <excludes>
                         <exclude>src/main/webapp/app/*/templates/*.html</exclude>
                         <exclude>**/*.json</exclude>
+                        <exclude>**/*.md</exclude>
                         <exclude>src/licenses/**/*</exclude>
                     </excludes>
                 </configuration>
@@ -225,6 +226,41 @@
                     </execution>
                 </executions>
 
+            </plugin>
+
+            <!-- Build REST API documentation using Swagger -->
+            <plugin>
+                <groupId>com.github.kongchen</groupId>
+                <artifactId>swagger-maven-plugin</artifactId>
+                <version>3.1.7</version>
+                <configuration>
+                    <apiSources>
+                        <apiSource>
+                            <locations>
+                                <location>org.apache.guacamole.rest</location>
+                            </locations>
+                            <schemes>
+                                <scheme>http</scheme>
+                                <scheme>https</scheme>
+                            </schemes>
+                            <basePath>/api</basePath>
+                            <info>
+                                <title>Apache Guacamole REST API</title>
+                                <version>${project.version}</version>
+                                <description>Test description.</description>
+                            </info>
+                            <swaggerDirectory>${project.build.directory}/rest</swaggerDirectory>
+                        </apiSource>
+                    </apiSources>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
         </plugins>
@@ -470,7 +506,14 @@
             <artifactId>jsr250-api</artifactId>
             <version>1.0</version>
         </dependency>
-        
+
+        <!-- Swagger annotations for documenting REST APIs -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>2.1.1</version>
+        </dependency>
+
         <!-- Jackson for JSON support -->
         <dependency>
             <groupId>com.sun.jersey</groupId>

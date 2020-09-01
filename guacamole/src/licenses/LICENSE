@@ -759,6 +759,15 @@ Simple Logging Facade for Java (http://slf4j.org/)
  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
+Swagger Core (https://github.com/swagger-api/swagger-core)
+----------------------------------------------------------
+
+    Version: 2.1.1
+    From: 'SmartBear Software' (https://smartbear.com/)
+    License(s):
+        Apache v2.0 (bundled/swagger-core-2.1.1/LICENSE)
+
+
 webjars-servlet-2.x (https://github.com/webjars/webjars-servlet-2.x)
 --------------------------------------------------------------------
 
