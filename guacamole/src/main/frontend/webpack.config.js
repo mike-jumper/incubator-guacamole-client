@@ -19,30 +19,13 @@
 
 const AngularTemplateCacheWebpackPlugin = require('angular-templatecache-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const ClosureWebpackPlugin = require('closure-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
-const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const DependencyListPlugin = require('./plugins/dependency-list-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const webpack = require('webpack');
 
 module.exports = {
-
-    bail: true,
-    mode: 'production',
-    stats: 'minimal',
-
-    output: {
-        path: __dirname + '/dist',
-        filename: 'guacamole.[contenthash].js',
-    },
-
-    // Generate source maps
-    devtool: 'source-map',
-
-    // Entry point for the Guacamole webapp is the "index" AngularJS module
-    entry: './src/app/index/indexModule.js',
 
     module: {
         rules: [
@@ -76,33 +59,6 @@ module.exports = {
 
         ]
     },
-    optimization: {
-        minimizer: [
-
-            // Minify using Google Closure Compiler
-            new ClosureWebpackPlugin({ mode: 'STANDARD' }, {
-                languageIn: 'ECMASCRIPT_2020',
-                languageOut: 'ECMASCRIPT5',
-                compilationLevel: 'SIMPLE'
-            }),
-
-            new CssMinimizerPlugin()
-
-        ],
-        splitChunks: {
-            cacheGroups: {
-
-                // Bundle CSS as one file
-                styles: {
-                    name: 'styles',
-                    test: /\.css$/,
-                    chunks: 'all',
-                    enforce: true
-                }
-
-            }
-        }
-    },
     plugins: [
 
         new AngularTemplateCacheWebpackPlugin({
@@ -135,18 +91,6 @@ module.exports = {
             { from: 'lodash/lodash.min.js' }
         ], {
             context: 'node_modules/'
-        }),
-
-        // Generate index.html from template
-        new HtmlWebpackPlugin({
-            inject: false,
-            template: 'src/index.html'
-        }),
-
-        // Extract CSS from Webpack bundle as separate file
-        new MiniCssExtractPlugin({
-            filename: 'guacamole.[contenthash].css',
-            chunkFilename: '[id].guacamole.[contenthash].css'
         }),
 
         // List all bundled node modules for sake of automatic LICENSE file

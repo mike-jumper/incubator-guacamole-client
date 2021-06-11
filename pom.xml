@@ -101,6 +101,7 @@
                             <excludes>
                                 <exclude>.dockerignore</exclude>
                                 <exclude>.ratignore</exclude>
+                                <exclude>**/*.component.html</exclude>
                                 <exclude>**/*.md</exclude>
                                 <exclude>**/*.json</exclude>
                                 <exclude>**/node_modules/**/*</exclude>

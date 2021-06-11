@@ -17,39 +17,15 @@
  * under the License.
  */
 
-require('angular-module-shim.js');
-require('relocateParameters.js');
+import { enableProdMode } from '@angular/core';
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 
-require('angular-translate-interpolation-messageformat');
-require('angular-translate-loader-static-files');
+import { AppModule } from './app/app.module';
+import { environment } from './environments/environment';
 
-/**
- * The module for the root of the application.
- */
-var module = angular.module('index', [
+if (environment.production)
+    enableProdMode();
 
-    require('angular-route'),
-    require('angular-translate'),
-
-    'auth',
-    'client',
-    'clipboard',
-    'home',
-    'login',
-    'manage',
-    'navigation',
-    'notification',
-    'rest',
-    'settings',
-
-    'templates-main'
-
-]);
-
-// Recursively pull in all other JavaScript and CSS files as requirements (just
-// like old minify-maven-plugin build)
-const context = require.context('../', true, /.*\.(css|js)$/);
-context.keys().forEach(key => context(key));
-
-export default module.name;
+platformBrowserDynamic().bootstrapModule(AppModule)
+    .catch(err => console.error(err));
 

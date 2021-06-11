@@ -17,39 +17,35 @@
  * under the License.
  */
 
-require('angular-module-shim.js');
-require('relocateParameters.js');
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { UpgradeModule } from '@angular/upgrade/static';
 
-require('angular-translate-interpolation-messageformat');
-require('angular-translate-loader-static-files');
+declare var angular: any;
 
-/**
- * The module for the root of the application.
- */
-var module = angular.module('index', [
+import index from './index/indexModule.js';
 
-    require('angular-route'),
-    require('angular-translate'),
+@NgModule({
+    imports: [
+        BrowserModule,
+        UpgradeModule
+    ],
+    declarations: []
+})
+export class AppModule {
 
-    'auth',
-    'client',
-    'clipboard',
-    'home',
-    'login',
-    'manage',
-    'navigation',
-    'notification',
-    'rest',
-    'settings',
+    constructor(private upgrade: UpgradeModule) { }
 
-    'templates-main'
+    /**
+     * Main Angular entrypoint.
+     */
+    ngDoBootstrap() {
 
-]);
+        // Upgrade legacy AngularJS portions of web application until full
+        // migration to Angular is complete
+        this.upgrade.bootstrap(document.documentElement, [index], { strictDi: true });
 
-// Recursively pull in all other JavaScript and CSS files as requirements (just
-// like old minify-maven-plugin build)
-const context = require.context('../', true, /.*\.(css|js)$/);
-context.keys().forEach(key => context(key));
+    }
 
-export default module.name;
+}
 

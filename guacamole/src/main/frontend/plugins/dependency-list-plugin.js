@@ -92,15 +92,28 @@ class DependencyListPlugin {
         const logger = compiler.getInfrastructureLogger(PLUGIN_NAME);
 
         /**
+         * The full path to the directory that should contain all build output.
+         *
+         * @type {string}
+         */
+        const outputPath = this.options.path || compiler.options.output.path;
+
+        /**
          * The full path to the output file that should contain the list of
          * discovered NPM module dependencies.
          *
          * @type {string}
          */
         const outputFile = path.join(
-            this.options.path || compiler.options.output.path,
+            outputPath,
             this.options.filename || 'npm-dependencies.txt'
         );
+
+        // Automatically create destination directory if it has not yet been
+        // created
+        fs.mkdir(outputPath, { recursive: true }, (err) => {
+            logger.debug('Cannot create output directory "%s": %s', outputPath, err);
+        });
 
         // Wait for compilation to fully complete
         compiler.hooks.done.tap(PLUGIN_NAME, (stats) => {

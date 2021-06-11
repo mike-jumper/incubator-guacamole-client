@@ -17,7 +17,7 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<html ng-app="index" ng-controller="indexController">
+<html ng-controller="indexController">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta http-equiv="x-ua-compatible" content="IE=edge">
@@ -28,13 +28,9 @@
         <link rel="icon" type="image/png" sizes="144x144" href="images/logo-144.png">
         <link rel="apple-touch-icon" type="image/png" href="images/logo-144.png">
 
-        <!-- Web application CSS (bundled by Webpack) -->
-        <% for (var index in htmlWebpackPlugin.files.css) { %>
-        <link rel="stylesheet" type="text/css" href="<%= htmlWebpackPlugin.files.css[index] %>">
-        <% } %>
-
-        <!-- Extension CSS (must be able to override webapp CSS) -->
-        <link rel="stylesheet" type="text/css" href="app.css?v=${project.version}">
+        <!-- Web application CSS (bundled by Angular+Webpack) and extension CSS
+            (app.css, generated at runtime) will be automatically included here
+            as part of the Angular build -->
 
         <title ng-bind="page.title | translate"></title>
     </head>
@@ -86,14 +82,12 @@
         <script type="text/javascript" src="lodash.min.js"></script>
         <script type="text/javascript" src="angular.min.js"></script>
 
-        <!-- Web application (bundled by Webpack) -->
-        <% for (var index in htmlWebpackPlugin.files.js) { %>
-        <script type="text/javascript" src="<%= htmlWebpackPlugin.files.js[index] %>"></script>
-        <% } %>
+        <!-- Legacy AngularJS templates (bundled by Webpack) -->
         <script type="text/javascript" src="templates.js"></script>
 
-        <!-- Extension JavaScript -->
-        <script type="text/javascript" src="app.js?v=${project.version}"></script>
+        <!-- Web application JavaScript (bundled by Angular+Webpack) and
+            extension JavaScript (app.js, generated at runtime) will be
+            automatically included here as part of the Angular build -->
 
     </body>
 </html>
