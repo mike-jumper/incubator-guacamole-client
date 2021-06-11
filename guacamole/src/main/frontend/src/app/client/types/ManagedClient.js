@@ -17,6 +17,8 @@
  * under the License.
  */
 
+import { ClipboardData } from 'app/clipboard/clipboard-data';
+
 /**
  * Provides the ManagedClient class used by the guacClientManager service.
  */
@@ -26,7 +28,6 @@ angular.module('client').factory('ManagedClient', ['$rootScope', '$injector',
     // Required types
     var ClientProperties       = $injector.get('ClientProperties');
     var ClientIdentifier       = $injector.get('ClientIdentifier');
-    var ClipboardData          = $injector.get('ClipboardData');
     var ManagedArgument        = $injector.get('ManagedArgument');
     var ManagedClientState     = $injector.get('ManagedClientState');
     var ManagedClientThumbnail = $injector.get('ManagedClientThumbnail');

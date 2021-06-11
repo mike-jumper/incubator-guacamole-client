@@ -17,16 +17,18 @@
  * under the License.
  */
 
-.clipboard-service-target {
-    background: white;
-}
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ClipboardEditorComponent } from './clipboard-editor/clipboard-editor.component';
 
-.clipboard-service-target {
-    position: fixed;
-    left: -1em;
-    right: -1em;
-    width: 1em;
-    height: 1em;
-    white-space: pre;
-    overflow: hidden;
-}
+@NgModule({
+    declarations: [
+        ClipboardEditorComponent
+    ],
+    imports: [
+        CommonModule,
+        FormsModule
+    ]
+})
+export class ClipboardModule { }

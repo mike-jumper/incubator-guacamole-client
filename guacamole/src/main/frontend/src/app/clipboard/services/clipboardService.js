@@ -17,6 +17,8 @@
  * under the License.
  */
 
+import { ClipboardData } from 'app/clipboard/clipboard-data';
+
 /**
  * A service for accessing local clipboard data.
  */
@@ -26,9 +28,6 @@ angular.module('clipboard').factory('clipboardService', ['$injector',
     // Get required services
     var $q      = $injector.get('$q');
     var $window = $injector.get('$window');
-
-    // Required types
-    var ClipboardData = $injector.get('ClipboardData');
 
     var service = {};
 

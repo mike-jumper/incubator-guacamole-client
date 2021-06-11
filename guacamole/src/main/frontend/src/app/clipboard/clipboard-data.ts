@@ -18,42 +18,36 @@
  */
 
 /**
- * Provides the ClipboardData class used for interchange between the
- * guacClipboard directive, clipboardService service, etc.
+ * Arbitrary data which can be contained by the clipboard.
  */
-angular.module('clipboard').factory('ClipboardData', [function defineClipboardData() {
+export class ClipboardData {
 
     /**
-     * Arbitrary data which can be contained by the clipboard.
+     * The mimetype of the data currently stored within the clipboard.
      *
-     * @constructor
+     * @type String
+     */
+    type: string = 'text/plain';
+
+    /**
+     * The data currently stored within the clipboard. Depending on the
+     * nature of the stored data, this may be either a String, a Blob, or a
+     * File.
+     *
+     * @type String|Blob|File
+     */
+    data: string|Blob|File = '';
+
+    /**
+     * Creates a new ClipboardData containing the clipboard data described by
+     * the given object.
+     *
      * @param {ClipboardData|Object} [template={}]
      *     The object whose properties should be copied within the new
      *     ClipboardData.
      */
-    var ClipboardData = function ClipboardData(template) {
+    constructor(template={}) {
+        Object.assign(this, template);
+    }
 
-        // Use empty object by default
-        template = template || {};
-
-        /**
-         * The mimetype of the data currently stored within the clipboard.
-         *
-         * @type String
-         */
-        this.type = template.type || 'text/plain';
-
-        /**
-         * The data currently stored within the clipboard. Depending on the
-         * nature of the stored data, this may be either a String, a Blob, or a
-         * File.
-         *
-         * @type String|Blob|File
-         */
-        this.data = template.data || '';
-
-    };
-
-    return ClipboardData;
-
-}]);
+}

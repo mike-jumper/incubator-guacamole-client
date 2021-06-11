@@ -17,16 +17,8 @@
  * under the License.
  */
 
-.clipboard-service-target {
-    background: white;
-}
+import { ClipboardEditorComponent } from 'app/clipboard/clipboard-editor/clipboard-editor.component'
+import { downgradeComponent } from '@angular/upgrade/static';
 
-.clipboard-service-target {
-    position: fixed;
-    left: -1em;
-    right: -1em;
-    width: 1em;
-    height: 1em;
-    white-space: pre;
-    overflow: hidden;
-}
+angular.module('clipboard').directive('guacClipboardEditor',
+        downgradeComponent({ component: ClipboardEditorComponent }));

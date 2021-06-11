@@ -17,16 +17,35 @@
  * under the License.
  */
 
-.clipboard-service-target {
+.clipboard {
     background: white;
 }
 
-.clipboard-service-target {
-    position: fixed;
-    left: -1em;
-    right: -1em;
-    width: 1em;
-    height: 1em;
+.clipboard  {
+    position: relative;
+    border: 1px solid #AAA;
+    -moz-border-radius: 0.25em;
+    -webkit-border-radius: 0.25em;
+    -khtml-border-radius: 0.25em;
+    border-radius: 0.25em;
+    width: 100%;
+    height: 2in;
     white-space: pre;
-    overflow: hidden;
+    font-size: 1em;
+    overflow: auto;
+    padding: 0.25em;
+}
+
+.clipboard p,
+.clipboard div {
+    margin: 0;
+}
+
+.clipboard img {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+    margin: 0 auto;
+    border: 1px solid black;
+    background: url('images/checker.png');
 }
