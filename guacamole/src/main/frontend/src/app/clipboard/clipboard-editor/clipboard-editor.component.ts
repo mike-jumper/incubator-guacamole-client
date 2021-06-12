@@ -23,7 +23,8 @@ import {
     Input,
     OnChanges,
     Output,
-    SimpleChanges
+    SimpleChanges,
+    ViewEncapsulation
 } from '@angular/core';
 
 import { ClipboardData } from 'app/clipboard/clipboard-data';
@@ -37,7 +38,8 @@ import { ClipboardData } from 'app/clipboard/clipboard-data';
 @Component({
     selector: 'guac-clipboard-editor',
     templateUrl: './clipboard-editor.component.html',
-    styleUrls: ['./clipboard-editor.component.less']
+    styleUrls: ['./clipboard-editor.component.less'],
+    encapsulation: ViewEncapsulation.None
 })
 export class ClipboardEditorComponent implements OnChanges {
 
